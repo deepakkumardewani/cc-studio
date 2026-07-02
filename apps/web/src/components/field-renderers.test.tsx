@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { expect, test } from "vite-plus/test";
-import { ReadOnlyField } from "./field-renderers";
+import { ReadOnlyField, ToggleField } from "./field-renderers";
 
 test("boolean field renders as toggle", () => {
   const html = renderToStaticMarkup(
@@ -42,4 +42,19 @@ test("enum field renders as select", () => {
   expect(html).toContain("<select");
   expect(html).toContain('value="high"');
   expect(html).toContain("Effort Level");
+});
+
+test("inline error uses danger styling", () => {
+  const html = renderToStaticMarkup(
+    <ToggleField
+      id="setting-alwaysThinkingEnabled"
+      label="Always Thinking Enabled"
+      description="Enable extended thinking by default."
+      value={false}
+      error="Invalid value"
+    />,
+  );
+
+  expect(html).toContain("text-danger");
+  expect(html).toContain("Invalid value");
 });
