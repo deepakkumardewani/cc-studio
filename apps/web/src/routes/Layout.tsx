@@ -40,8 +40,8 @@ export function Layout() {
   }, []);
 
   return (
-    <div className="flex min-h-screen flex-col bg-surface text-text">
-      <header className="border-b border-border-subtle bg-surface-raised">
+    <div className="flex h-dvh flex-col overflow-hidden bg-surface text-text">
+      <header className="shrink-0 border-b border-border-subtle bg-surface-raised">
         <div className="flex items-center justify-between px-6 py-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
@@ -71,11 +71,11 @@ export function Layout() {
         </div>
       </header>
 
-      <div className="flex min-h-0 flex-1">
-        <aside className="w-72 shrink-0 overflow-y-auto border-r border-border-subtle bg-surface-raised py-4">
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <aside className="w-72 shrink-0 overflow-y-auto overscroll-contain border-r border-border-subtle bg-surface-raised py-4">
           <FileTree categories={categories} loading={loading} error={error} />
         </aside>
-        <main className="min-w-0 flex-1 overflow-y-auto px-6 py-8">
+        <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain px-6 py-8">
           <Outlet />
         </main>
       </div>

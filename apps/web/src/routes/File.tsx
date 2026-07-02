@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { MarkdownView } from "../components/MarkdownView";
 import { fetchFile, isRouteSegment, routeToCategory, type ApiCategory } from "../lib/api";
 
@@ -77,29 +77,14 @@ export function File() {
   const isJson = title.endsWith(".json");
 
   return (
-    <section className="space-y-6">
-      <div className="flex items-center justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">File</p>
-          <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
-        </div>
-        <Link
-          to="/"
-          className="text-sm font-medium text-text-muted underline decoration-border-subtle underline-offset-4 hover:text-text hover:decoration-accent"
-        >
-          Back to list
-        </Link>
-      </div>
-
+    <article className="mx-auto max-w-[70ch]">
       {isJson ? (
-        <pre className="overflow-x-auto rounded-xl border border-border-subtle bg-surface-raised p-5 font-mono text-sm text-text">
+        <pre className="overflow-x-auto rounded-xl border border-border-subtle bg-surface-raised p-5 font-mono text-sm text-text-muted">
           {content}
         </pre>
       ) : (
-        <div className="rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-sm">
-          <MarkdownView content={content} />
-        </div>
+        <MarkdownView content={content} />
       )}
-    </section>
+    </article>
   );
 }

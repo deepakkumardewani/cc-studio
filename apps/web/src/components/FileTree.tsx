@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import type { TreeCategory } from "../lib/api";
-import { buildTree, type TreeNode } from "../lib/tree";
+import { buildTree, type TreeFile, type TreeNode } from "../lib/tree";
 
 const OPEN_FOLDERS_KEY = "cc-studio-tree-open";
 
@@ -23,6 +23,31 @@ function saveOpenFolders(open: Set<string>): void {
 
 function folderKey(category: string, path: string): string {
   return `${category}:${path}`;
+}
+
+function categoryKey(category: string): string {
+  return `category:${category}`;
+}
+
+function isSingleFileCategory(nodes: TreeNode[]): nodes is [TreeFile] {
+  return nodes.length === 1 && nodes[0].kind === "file";
+}
+
+function isHrefInTree(nodes: TreeNode[], href: string): boolean {
+  for (const node of nodes) {
+    if (node.kind === "file") {
+      if (node.href === href) {
+        return true;
+      }
+      continue;
+    }
+
+    if (isHrefInTree(node.children, href)) {
+      return true;
+    }
+  }
+
+  return false;
 }
 
 function findFolderPathsToHref(nodes: TreeNode[], href: string, folderPath = ""): string[] | null {
@@ -97,6 +122,13 @@ function FileIcon() {
   );
 }
 
+function fileLinkClass(isActive: boolean): string {
+  return [
+    "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm",
+    isActive ? "bg-accent/15 font-medium text-accent" : "text-text hover:bg-surface",
+  ].join(" ");
+}
+
 type TreeBranchProps = {
   node: TreeNode;
   category: string;
@@ -121,14 +153,7 @@ function TreeBranch({
       <li role="treeitem" aria-selected={isActive} className="list-none">
         <NavLink
           to={node.href}
-          className={({ isActive: linkActive }) =>
-            [
-              "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm",
-              linkActive || isActive
-                ? "bg-accent/15 font-medium text-accent"
-                : "text-text hover:bg-surface-raised",
-            ].join(" ")
-          }
+          className={({ isActive: linkActive }) => fileLinkClass(linkActive || isActive)}
         >
           <span className="w-3.5 shrink-0" />
           <FileIcon />
@@ -147,7 +172,7 @@ function TreeBranch({
       <button
         type="button"
         aria-label={`${isOpen ? "Collapse" : "Expand"} ${node.name}`}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-text hover:bg-surface-raised"
+        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-text hover:bg-surface"
         onClick={() => onToggle(key)}
         onKeyDown={(event) => {
           if (event.key === "Enter" || event.key === " ") {
@@ -201,8 +226,16 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
       let changed = false;
 
       for (const { category, nodes } of trees) {
+        if (isHrefInTree(nodes, activeHref)) {
+          const catOpenKey = categoryKey(category.category);
+          if (!next.has(catOpenKey)) {
+            next.add(catOpenKey);
+            changed = true;
+          }
+        }
+
         const paths = findFolderPathsToHref(nodes, activeHref);
-        if (!paths) {
+        if (paths === null) {
           continue;
         }
 
@@ -245,31 +278,66 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
   }
 
   return (
-    <nav aria-label="Config files" className="space-y-5">
-      {trees.map(({ category, nodes }) => (
-        <section key={category.category}>
-          <h2 className="px-3 pb-2 text-xs font-semibold uppercase tracking-[0.16em] text-text-muted">
-            {category.label}
-          </h2>
-          {nodes.length === 0 ? (
-            <p className="px-3 text-sm text-text-muted">No files</p>
-          ) : (
-            <ul role="tree" aria-label={category.label} className="space-y-0.5 px-1">
-              {nodes.map((node) => (
-                <TreeBranch
-                  key={node.kind === "folder" ? `folder:${node.name}` : `file:${node.href}`}
-                  node={node}
-                  category={category.category}
-                  folderPath=""
-                  openFolders={openFolders}
-                  activeHref={activeHref}
-                  onToggle={handleToggle}
-                />
-              ))}
-            </ul>
-          )}
-        </section>
-      ))}
+    <nav aria-label="Config files" className="space-y-1 px-2">
+      {trees.map(({ category, nodes }) => {
+        if (isSingleFileCategory(nodes)) {
+          const file = nodes[0];
+          const isActive = activeHref === file.href;
+
+          return (
+            <NavLink
+              key={category.category}
+              to={file.href}
+              className={({ isActive: linkActive }) =>
+                [
+                  "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium",
+                  fileLinkClass(linkActive || isActive),
+                ].join(" ")
+              }
+            >
+              <FileIcon />
+              <span className="truncate">{category.label}</span>
+            </NavLink>
+          );
+        }
+
+        const catOpenKey = categoryKey(category.category);
+        const isCategoryOpen = openFolders.has(catOpenKey);
+
+        return (
+          <section key={category.category}>
+            <button
+              type="button"
+              aria-expanded={isCategoryOpen}
+              aria-label={`${isCategoryOpen ? "Collapse" : "Expand"} ${category.label}`}
+              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-semibold text-text hover:bg-surface"
+              onClick={() => handleToggle(catOpenKey)}
+            >
+              <ChevronIcon expanded={isCategoryOpen} />
+              <span className="truncate">{category.label}</span>
+            </button>
+            {isCategoryOpen ? (
+              nodes.length === 0 ? (
+                <p className="px-3 py-1 text-sm text-text-muted">No files</p>
+              ) : (
+                <ul role="tree" aria-label={category.label} className="mt-0.5 space-y-0.5 pl-1">
+                  {nodes.map((node) => (
+                    <TreeBranch
+                      key={node.kind === "folder" ? `folder:${node.name}` : `file:${node.href}`}
+                      node={node}
+                      category={category.category}
+                      folderPath=""
+                      openFolders={openFolders}
+                      activeHref={activeHref}
+                      onToggle={handleToggle}
+                    />
+                  ))}
+                </ul>
+              )
+            ) : null}
+          </section>
+        );
+      })}
     </nav>
   );
 }
