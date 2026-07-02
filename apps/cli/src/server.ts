@@ -1,5 +1,6 @@
 import { Hono } from "hono";
 import { getFileResponse } from "./routes/file.js";
+import { getSettingsResponse, getSettingsSchemaResponse } from "./routes/settings.js";
 import { getTreeResponse } from "./routes/tree.js";
 
 export function createApp() {
@@ -20,6 +21,16 @@ export function createApp() {
     if (result.status === 200) {
       return c.json(result.body);
     }
+    return c.json(result.body, result.status);
+  });
+
+  app.get("/api/settings/schema", (c) => {
+    const result = getSettingsSchemaResponse();
+    return c.json(result.body, result.status);
+  });
+
+  app.get("/api/settings", async (c) => {
+    const result = await getSettingsResponse();
     return c.json(result.body, result.status);
   });
 
