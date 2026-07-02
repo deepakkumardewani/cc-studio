@@ -94,3 +94,17 @@ export async function fetchSettingsSchema(): Promise<SettingsSchemaResponse> {
 export async function fetchSettings(): Promise<SettingsResponse> {
   return parseJson<SettingsResponse>(await fetch("/api/settings"));
 }
+
+export async function updateSettings(settings: Record<string, unknown>): Promise<SettingsResponse> {
+  const response = await fetch("/api/settings", {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(settings),
+  });
+
+  if (!response.ok) {
+    throw new Error(`request failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<SettingsResponse>;
+}

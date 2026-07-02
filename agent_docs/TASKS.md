@@ -130,30 +130,32 @@ Legend: ☐ todo · 🔶 checkpoint (human review gate)
 
 ## Phase 3 — Slice C: edit settings safely
 
-### T3.1 — Settings form (react-hook-form + zod resolver)
+### T3.1 — Settings form (react-hook-form + zod resolver) ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/web/src/components/SettingsForm.tsx`,
   `apps/web/src/routes/Settings.tsx` (upgrade to editable),
   `apps/web/src/components/SettingsForm.test.tsx`
 - **Do:** Walk schema to generate fields; react-hook-form + zodResolver for
   state + validation; surface field-level errors inline; submit → `PUT /api/settings`.
-- **Acceptance:** Form reflects schema; invalid input shows inline error and blocks submit.
-- **Verify:** Component test: enum→select, boolean→toggle, invalid value surfaces error.
+- **Acceptance:** ✅ Form reflects schema; invalid input shows inline error and blocks submit.
+- **Verify:** ✅ Component test: enum→select, boolean→toggle, invalid value surfaces error.
 
-### T3.2 — Settings write API (validate → backup → atomic write)
+### T3.2 — Settings write API (validate → backup → atomic write) ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/cli/src/routes/settings.ts` (add PUT),
   `apps/cli/src/fs/writeSettings.ts`, `apps/cli/src/fs/writeSettings.test.ts`
 - **Do:** `PUT /api/settings` → zod-validate → write `settings.json.bak` → atomic
   write (temp file + rename) to `settings.json`. Only `settings.json` is writable.
-- **Acceptance:** Valid write succeeds + refreshes `.bak`; invalid rejected **before** any write;
+- **Acceptance:** ✅ Valid write succeeds + refreshes `.bak`; invalid rejected **before** any write;
   a valid file is never corrupted; nothing else writable.
-- **Verify:** Tests: invalid → 400 + no disk change; valid → `.bak` created then file updated
+- **Verify:** ✅ Tests: invalid → 400 + no disk change; valid → `.bak` created then file updated
   atomically; traversal/other-target write attempts throw.
 
-### 🔶 Checkpoint 3
+### 🔶 Checkpoint 3 ✅
 
-Edit + save writes valid JSON · refreshes `.bak` · rejects invalid pre-write · never corrupts. (SPEC Success Criterion 5)
+✅ Edit + save writes valid JSON · refreshes `.bak` · rejects invalid pre-write · never corrupts. (SPEC Success Criterion 5)
 **Stop for review.**
 
 ---
