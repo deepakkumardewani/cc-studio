@@ -5,15 +5,117 @@ export type SelectOption = {
   label: string;
 };
 
+export const SETTINGS_GROUP_ORDER = [
+  "General",
+  "Permissions",
+  "Hooks",
+  "Status Line",
+  "Plugins & Marketplaces",
+  "MCP Servers",
+  "Auth & Env",
+  "Advanced",
+] as const;
+
+export type SettingsGroup = (typeof SETTINGS_GROUP_ORDER)[number];
+
 export type FieldMetadata = {
   key: string;
   label: string;
   description: string;
   control: ControlType;
+  group: SettingsGroup;
   options?: SelectOption[];
 };
 
-export const SETTINGS_FIELD_METADATA: FieldMetadata[] = [
+const FIELD_GROUP_BY_KEY: Record<string, SettingsGroup> = {
+  agent: "General",
+  alwaysThinkingEnabled: "General",
+  attribution: "General",
+  autoMemoryDirectory: "General",
+  autoMemoryEnabled: "General",
+  autoUpdatesChannel: "General",
+  availableModels: "General",
+  cleanupPeriodDays: "General",
+  claudeMdExcludes: "General",
+  companyAnnouncements: "General",
+  defaultShell: "General",
+  disableDeepLinkRegistration: "General",
+  effortLevel: "General",
+  fastMode: "General",
+  fastModePerSessionOptIn: "General",
+  feedbackSurveyRate: "General",
+  fileSuggestion: "General",
+  includeCoAuthoredBy: "General",
+  includeGitInstructions: "General",
+  language: "General",
+  minimumVersion: "General",
+  model: "General",
+  modelOverrides: "General",
+  outputStyle: "General",
+  plansDirectory: "General",
+  prefersReducedMotion: "General",
+  prUrlTemplate: "General",
+  respectGitignore: "General",
+  sandbox: "General",
+  showClearContextOnPlanAccept: "General",
+  showThinkingSummaries: "General",
+  showTurnDuration: "General",
+  skillOverrides: "General",
+  skipWebFetchPreflight: "General",
+  spinnerTipsEnabled: "General",
+  spinnerTipsOverride: "General",
+  spinnerVerbs: "General",
+  teammateMode: "General",
+  terminalProgressBarEnabled: "General",
+  tui: "General",
+  viewMode: "General",
+  voiceEnabled: "General",
+  worktree: "General",
+  allowManagedPermissionRulesOnly: "Permissions",
+  autoMode: "Permissions",
+  permissions: "Permissions",
+  skipDangerousModePermissionPrompt: "Permissions",
+  useAutoModeDuringPlan: "Permissions",
+  allowManagedHooksOnly: "Hooks",
+  allowedHttpHookUrls: "Hooks",
+  disableAllHooks: "Hooks",
+  hooks: "Hooks",
+  httpHookAllowedEnvVars: "Hooks",
+  statusLine: "Status Line",
+  subagentStatusLine: "Status Line",
+  blockedMarketplaces: "Plugins & Marketplaces",
+  enabledPlugins: "Plugins & Marketplaces",
+  extraKnownMarketplaces: "Plugins & Marketplaces",
+  pluginConfigs: "Plugins & Marketplaces",
+  pluginTrustMessage: "Plugins & Marketplaces",
+  skippedMarketplaces: "Plugins & Marketplaces",
+  skippedPlugins: "Plugins & Marketplaces",
+  strictKnownMarketplaces: "Plugins & Marketplaces",
+  strictPluginOnlyCustomization: "Plugins & Marketplaces",
+  allowManagedMcpServersOnly: "MCP Servers",
+  allowedChannelPlugins: "MCP Servers",
+  allowedMcpServers: "MCP Servers",
+  channelsEnabled: "MCP Servers",
+  deniedMcpServers: "MCP Servers",
+  disabledMcpjsonServers: "MCP Servers",
+  enableAllProjectMcpServers: "MCP Servers",
+  enabledMcpjsonServers: "MCP Servers",
+  apiKeyHelper: "Auth & Env",
+  awsAuthRefresh: "Auth & Env",
+  awsCredentialExport: "Auth & Env",
+  env: "Auth & Env",
+  forceLoginMethod: "Auth & Env",
+  forceLoginOrgUUID: "Auth & Env",
+  otelHeadersHelper: "Auth & Env",
+  disableSkillShellExecution: "Advanced",
+  forceRemoteSettingsRefresh: "Advanced",
+  parentSettingsBehavior: "Advanced",
+  wslInheritsWindowsSettings: "Advanced",
+};
+
+type BaseFieldMetadata = Omit<FieldMetadata, "group">;
+
+const BASE_SETTINGS_FIELD_METADATA: BaseFieldMetadata[] = [
   {
     key: "apiKeyHelper",
     label: "Api Key Helper",
@@ -697,6 +799,20 @@ export const SETTINGS_FIELD_METADATA: FieldMetadata[] = [
     control: "json",
   },
 ];
+
+function attachFieldGroups(fields: BaseFieldMetadata[]): FieldMetadata[] {
+  return fields.map((field) => {
+    const group = FIELD_GROUP_BY_KEY[field.key];
+    if (!group) {
+      throw new Error(`Missing settings group for field "${field.key}"`);
+    }
+    return { ...field, group };
+  });
+}
+
+export const SETTINGS_FIELD_METADATA: FieldMetadata[] = attachFieldGroups(
+  BASE_SETTINGS_FIELD_METADATA,
+);
 
 export function getSettingsFieldMetadata(): FieldMetadata[] {
   return SETTINGS_FIELD_METADATA;

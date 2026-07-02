@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vite-plus/test";
 import {
   DEFAULT_SETTINGS,
+  SETTINGS_GROUP_ORDER,
   claudeSettingsSchema,
   getSettingsFieldMetadata,
   parseSettings,
@@ -86,5 +87,19 @@ describe("claudeSettingsSchema", () => {
     const shapeKeys = Object.keys(claudeSettingsSchema.shape).filter((key) => key !== "$schema");
     expect(metadata).toHaveLength(shapeKeys.length);
     expect(metadata.map((field) => field.key).sort()).toEqual(shapeKeys.sort());
+  });
+
+  test("every metadata entry has a known group", () => {
+    const metadata = getSettingsFieldMetadata();
+    const knownGroups = new Set<string>(SETTINGS_GROUP_ORDER);
+
+    for (const field of metadata) {
+      expect(field.group).toBeDefined();
+      expect(knownGroups.has(field.group)).toBe(true);
+    }
+
+    for (const group of SETTINGS_GROUP_ORDER) {
+      expect(metadata.some((field) => field.group === group)).toBe(true);
+    }
   });
 });
