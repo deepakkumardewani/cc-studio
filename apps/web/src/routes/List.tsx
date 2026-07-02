@@ -1,6 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
-import { fetchTree, fileHref, type TreeCategory } from "../lib/api";
+import { useEffect, useMemo, useState } from "react";
+import { fetchTree, type TreeCategory } from "../lib/api";
 
 export function List() {
   const [categories, setCategories] = useState<TreeCategory[]>([]);
@@ -18,7 +17,7 @@ export function List() {
       })
       .catch(() => {
         if (!cancelled) {
-          setError("Unable to load config categories.");
+          setError("Unable to load overview.");
         }
       })
       .finally(() => {
@@ -32,8 +31,13 @@ export function List() {
     };
   }, []);
 
+  const totalFiles = useMemo(
+    () => categories.reduce((sum, category) => sum + category.files.length, 0),
+    [categories],
+  );
+
   if (loading) {
-    return <p className="text-text-muted">Loading config types…</p>;
+    return <p className="text-text-muted">Loading overview…</p>;
   }
 
   if (error) {
@@ -41,43 +45,33 @@ export function List() {
   }
 
   return (
-    <section className="space-y-8">
+    <section className="mx-auto max-w-3xl space-y-8">
       <div>
-        <h2 className="text-2xl font-semibold tracking-tight">Config types</h2>
+        <h2 className="text-2xl font-semibold tracking-tight">Welcome</h2>
         <p className="mt-2 max-w-2xl text-text-muted">
-          Browse the five author-owned config surfaces under your local Claude directory.
+          Browse and edit the five author-owned config surfaces in your local Claude directory. Use
+          the sidebar to open skills, plans, commands, CLAUDE.md, and settings.
         </p>
       </div>
 
-      <div className="grid gap-4">
+      <div className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-sm">
+        <p className="text-sm font-medium text-text-muted">Total files</p>
+        <p className="mt-1 text-3xl font-semibold tabular-nums">{totalFiles}</p>
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2">
         {categories.map((category) => (
           <article
             key={category.category}
-            className="rounded-xl border border-border-subtle bg-surface-raised p-5 shadow-sm"
+            className="rounded-xl border border-border-subtle bg-surface-raised p-4 shadow-sm"
           >
-            <div className="flex items-center justify-between gap-4">
-              <h3 className="text-lg font-medium">{category.label}</h3>
-              <span className="rounded-full bg-surface px-3 py-1 text-xs font-medium text-text-muted">
-                {category.files.length} file{category.files.length === 1 ? "" : "s"}
-              </span>
-            </div>
-
-            {category.files.length === 0 ? (
-              <p className="mt-3 text-sm text-text-muted">No files found.</p>
-            ) : (
-              <ul className="mt-4 space-y-2">
-                {category.files.map((file) => (
-                  <li key={file.name}>
-                    <Link
-                      to={fileHref(category.category, file.name)}
-                      className="text-sm font-medium text-text underline decoration-border-subtle underline-offset-4 hover:decoration-accent"
-                    >
-                      {file.name}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            )}
+            <h3 className="font-medium">{category.label}</h3>
+            <p className="mt-1 text-2xl font-semibold tabular-nums text-accent">
+              {category.files.length}
+            </p>
+            <p className="mt-1 text-xs text-text-muted">
+              {category.files.length === 1 ? "file" : "files"}
+            </p>
           </article>
         ))}
       </div>
