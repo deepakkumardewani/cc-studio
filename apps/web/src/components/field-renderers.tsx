@@ -215,6 +215,7 @@ export type SchemaField = {
   label: string;
   description: string;
   control: "toggle" | "select" | "input" | "json";
+  group: string;
   options?: SelectOption[];
 };
 

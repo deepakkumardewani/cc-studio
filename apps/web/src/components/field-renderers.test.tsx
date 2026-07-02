@@ -10,6 +10,7 @@ test("boolean field renders as toggle", () => {
         label: "Always Thinking Enabled",
         description: "Enable extended thinking by default.",
         control: "toggle",
+        group: "General",
       }}
       value={true}
     />,
@@ -28,6 +29,7 @@ test("enum field renders as select", () => {
         label: "Effort Level",
         description: "Persist adaptive reasoning effort across sessions.",
         control: "select",
+        group: "General",
         options: [
           { value: "low", label: "low" },
           { value: "high", label: "high" },

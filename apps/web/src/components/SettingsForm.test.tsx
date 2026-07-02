@@ -13,16 +13,25 @@ const sampleFields = [
     label: "Always Thinking Enabled",
     description: "Enable extended thinking by default.",
     control: "toggle" as const,
+    group: "General",
   },
   {
     key: "effortLevel",
     label: "Effort Level",
     description: "Persist adaptive reasoning effort across sessions.",
     control: "select" as const,
+    group: "General",
     options: [
       { value: "low", label: "low" },
       { value: "high", label: "high" },
     ],
+  },
+  {
+    key: "permissions",
+    label: "Permissions",
+    description: "Tool usage permissions configuration.",
+    control: "json" as const,
+    group: "Permissions",
   },
 ];
 
@@ -84,6 +93,7 @@ test("invalid number input surfaces inline error and blocks submit", async () =>
           label: "Cleanup Period Days",
           description: "Number of days to retain sessions.",
           control: "input",
+          group: "General",
         },
       ]}
       defaultValues={{}}
@@ -122,4 +132,20 @@ test("valid submit calls onSubmit with parsed values", async () => {
       effortLevel: "low",
     });
   });
+});
+
+test("renders grouped section navigation", () => {
+  render(
+    <SettingsForm
+      fields={sampleFields}
+      defaultValues={{ alwaysThinkingEnabled: false, effortLevel: "high" }}
+      onSubmit={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole("navigation", { name: "Settings sections" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "General" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Permissions" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "General" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: "Permissions" })).toBeTruthy();
 });

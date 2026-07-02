@@ -60,6 +60,7 @@ export type SettingsField = {
   label: string;
   description: string;
   control: "toggle" | "select" | "input" | "json";
+  group: string;
   options?: Array<{ value: string; label: string }>;
 };
 
