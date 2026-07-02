@@ -10,11 +10,16 @@ function resolveName(category: ApiCategory, nameParam?: string): string {
   if (category === "settings") {
     return "settings.json";
   }
-  return decodeURIComponent(nameParam ?? "");
+  if (!nameParam) {
+    return "";
+  }
+  return nameParam.split("/").map(decodeURIComponent).join("/");
 }
 
 export function File() {
-  const { segment, name: nameParam } = useParams<{ segment: string; name?: string }>();
+  const { segment } = useParams<{ segment: string }>();
+  const params = useParams<{ "*": string }>();
+  const nameParam = params["*"];
   const [content, setContent] = useState<string>("");
   const [title, setTitle] = useState<string>("");
   const [error, setError] = useState<string | null>(null);

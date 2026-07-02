@@ -12,7 +12,7 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <List /> },
-      { path: ":segment/:name", element: <File /> },
+      { path: ":segment/*", element: <File /> },
       { path: ":segment", element: <File /> },
     ],
   },
