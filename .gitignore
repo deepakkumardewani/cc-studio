@@ -28,3 +28,6 @@ dist-ssr
 
 # Verification artifacts
 .verification/
+.verification-screenshots/
+
+*.tsbuildinfo
