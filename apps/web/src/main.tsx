@@ -4,6 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import { File } from "./routes/File";
 import { Layout } from "./routes/Layout";
 import { List } from "./routes/List";
+import { Settings } from "./routes/Settings";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -12,6 +13,7 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <List /> },
+      { path: "settings", element: <Settings /> },
       { path: ":segment/*", element: <File /> },
       { path: ":segment", element: <File /> },
     ],

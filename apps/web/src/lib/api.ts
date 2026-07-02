@@ -55,6 +55,22 @@ export type FileResponse = {
   content: string;
 };
 
+export type SettingsField = {
+  key: string;
+  label: string;
+  description: string;
+  control: "toggle" | "select" | "input" | "json";
+  options?: Array<{ value: string; label: string }>;
+};
+
+export type SettingsSchemaResponse = {
+  fields: SettingsField[];
+};
+
+export type SettingsResponse = {
+  settings: Record<string, unknown>;
+};
+
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     throw new Error(`request failed: ${response.status}`);
@@ -69,4 +85,12 @@ export async function fetchTree(): Promise<TreeResponse> {
 export async function fetchFile(category: ApiCategory, name: string): Promise<FileResponse> {
   const params = new URLSearchParams({ category, name });
   return parseJson<FileResponse>(await fetch(`/api/file?${params.toString()}`));
+}
+
+export async function fetchSettingsSchema(): Promise<SettingsSchemaResponse> {
+  return parseJson<SettingsSchemaResponse>(await fetch("/api/settings/schema"));
+}
+
+export async function fetchSettings(): Promise<SettingsResponse> {
+  return parseJson<SettingsResponse>(await fetch("/api/settings"));
 }

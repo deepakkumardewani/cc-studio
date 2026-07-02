@@ -9,7 +9,7 @@
   "type": "module",
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
-    "dev": "vp run -r --parallel dev",
+    "dev": "vp run schema#build && vp run -r --parallel dev",
     "build": "vp run web#build",
     "test": "vp test",
     "check": "vp check",
