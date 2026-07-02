@@ -32,3 +32,16 @@ test("MarkdownView renders GFM table and code block", () => {
   expect(html).toContain("text-text-muted");
   expect(html).toContain("text-text");
 });
+
+test("MarkdownView applies token classes to prose elements", () => {
+  const proseSample = "> Quote\n\n[Link](https://example.com)\n\n`inline`";
+  const html = renderToStaticMarkup(
+    <ThemeProvider>
+      <MarkdownView content={proseSample} />
+    </ThemeProvider>,
+  );
+
+  expect(html).toContain("text-accent");
+  expect(html).toContain("ring-border-subtle");
+  expect(html).toContain("bg-surface-raised");
+});
