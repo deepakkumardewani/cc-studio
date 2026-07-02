@@ -1,11 +1,15 @@
 import { useEffect, useState } from "react";
-import { ReadOnlyField, type SchemaField } from "../components/field-renderers";
-import { fetchSettings, fetchSettingsSchema } from "../lib/api";
+import type { ClaudeSettings } from "schema";
+import { SettingsForm } from "../components/SettingsForm";
+import type { SchemaField } from "../components/field-renderers";
+import { fetchSettings, fetchSettingsSchema, updateSettings } from "../lib/api";
 
 export function Settings() {
   const [fields, setFields] = useState<SchemaField[]>([]);
-  const [values, setValues] = useState<Record<string, unknown>>({});
+  const [values, setValues] = useState<ClaudeSettings>({});
   const [error, setError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -17,7 +21,7 @@ export function Settings() {
           return;
         }
         setFields(schema.fields);
-        setValues(settingsResponse.settings as Record<string, unknown>);
+        setValues(settingsResponse.settings as ClaudeSettings);
       })
       .catch(() => {
         if (!cancelled) {
@@ -35,6 +39,19 @@ export function Settings() {
     };
   }, []);
 
+  async function handleSubmit(nextValues: ClaudeSettings) {
+    setSubmitError(null);
+    setSubmitSuccess(null);
+
+    try {
+      const response = await updateSettings(nextValues);
+      setValues(response.settings as ClaudeSettings);
+      setSubmitSuccess("Settings saved.");
+    } catch {
+      setSubmitError("Unable to save settings. Check your values and try again.");
+    }
+  }
+
   if (loading) {
     return <p className="text-stone-600">Loading settings…</p>;
   }
@@ -49,15 +66,17 @@ export function Settings() {
         <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Settings</p>
         <h2 className="text-2xl font-semibold tracking-tight">Claude Code settings.json</h2>
         <p className="mt-2 text-sm text-stone-600">
-          Read-only view of every supported setting with its description and control type.
+          Edit supported settings with schema validation. Only settings.json is writable.
         </p>
       </div>
 
-      <div className="grid gap-4">
-        {fields.map((field) => (
-          <ReadOnlyField key={field.key} field={field} value={values[field.key]} />
-        ))}
-      </div>
+      <SettingsForm
+        fields={fields}
+        defaultValues={values}
+        onSubmit={handleSubmit}
+        submitError={submitError}
+        submitSuccess={submitSuccess}
+      />
     </section>
   );
 }
