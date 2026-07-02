@@ -134,7 +134,7 @@ active highlighting; deep links intact; keyboard-navigable. **Stop for review.**
 
 ### T B.1 — Frontmatter parser util
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/lib/frontmatter.ts`, `apps/web/src/lib/frontmatter.test.ts`
 - **Do:** `parseFrontmatter(raw)` → `{ data: Record<string,string>, body: string }`.
   Detects a leading `---` fence, extracts simple `key: value` pairs, returns the
@@ -146,7 +146,7 @@ active highlighting; deep links intact; keyboard-navigable. **Stop for review.**
 
 ### T B.2 — `SkillHeader` + File page wiring
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/components/SkillHeader.tsx`, `apps/web/src/routes/File.tsx`
 - **Do:** `File` parses frontmatter; when present, render `SkillHeader`
   (name→title, description→lead paragraph, `user-invocable`/`argument-hint`→chips)
@@ -160,7 +160,7 @@ active highlighting; deep links intact; keyboard-navigable. **Stop for review.**
 
 ### T B.3 — Dark-aware MarkdownView + code
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/components/MarkdownView.tsx`, `apps/web/src/lib/markdown.ts`, `apps/web/src/components/MarkdownView.test.tsx`
 - **Do:** Migrate prose element styles to tokens (headings, p, lists, tables,
   blockquote, links, inline code). Load `github-dark` alongside `github-light` in
@@ -171,7 +171,7 @@ active highlighting; deep links intact; keyboard-navigable. **Stop for review.**
   renders); agent-browser: a code-heavy file (CLAUDE.md) in both themes.
 - **Scope:** M · **Deps:** T B.2, T0.1
 
-### 🔶 Checkpoint B
+### 🔶 Checkpoint B — ☑ Complete
 
 SKILL.md shows title/description/chips (bug #5 fixed); prose + code readable in
 both themes. **Stop for review.**

@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { MarkdownView } from "../components/MarkdownView";
+import { SkillHeader } from "../components/SkillHeader";
 import { fetchFile, isRouteSegment, routeToCategory, type ApiCategory } from "../lib/api";
+import { parseFrontmatter } from "../lib/frontmatter";
 
 function resolveName(category: ApiCategory, nameParam?: string): string {
   if (category === "claudeMd") {
@@ -75,16 +77,32 @@ export function File() {
   }
 
   const isJson = title.endsWith(".json");
+  const { data, body, hasFrontmatter } = parseFrontmatter(content);
+  const markdownContent = hasFrontmatter ? body : content;
 
   return (
     <article className="mx-auto max-w-[70ch]">
-      {isJson ? (
-        <pre className="overflow-x-auto rounded-xl border border-border-subtle bg-surface-raised p-5 font-mono text-sm text-text-muted">
-          {content}
-        </pre>
-      ) : (
-        <MarkdownView content={content} />
-      )}
+      <Link
+        to="/"
+        className="inline-flex items-center gap-1.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
+      >
+        <span aria-hidden="true">←</span>
+        Back to list
+      </Link>
+
+      <div className="mt-6 rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-sm">
+        {hasFrontmatter ? <SkillHeader data={data} /> : null}
+
+        {isJson ? (
+          <pre className="overflow-x-auto rounded-lg bg-surface p-5 font-mono text-sm text-text-muted ring-1 ring-border-subtle">
+            {content}
+          </pre>
+        ) : (
+          <div className={hasFrontmatter ? "mt-6" : undefined}>
+            <MarkdownView content={markdownContent} />
+          </div>
+        )}
+      </div>
     </article>
   );
 }
