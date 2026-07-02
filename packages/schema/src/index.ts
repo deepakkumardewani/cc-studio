@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { getSettingsFieldMetadata, type FieldMetadata } from "./metadata.js";
 
 const hookCommandSchema = z.object({
   type: z.string(),

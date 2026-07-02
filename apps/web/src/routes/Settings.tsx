@@ -53,19 +53,21 @@ export function Settings() {
   }
 
   if (loading) {
-    return <p className="text-stone-600">Loading settings…</p>;
+    return <p className="text-text-muted">Loading settings…</p>;
   }
 
   if (error) {
-    return <p className="text-red-700">{error}</p>;
+    return <p className="text-danger">{error}</p>;
   }
 
   return (
     <section className="space-y-6">
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">Settings</p>
-        <h2 className="text-2xl font-semibold tracking-tight">Claude Code settings.json</h2>
-        <p className="mt-2 text-sm text-stone-600">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">Settings</p>
+        <h2 className="text-2xl font-semibold tracking-tight text-text">
+          Claude Code settings.json
+        </h2>
+        <p className="mt-2 text-sm text-text-muted">
           Edit supported settings with schema validation. Only settings.json is writable.
         </p>
       </div>
