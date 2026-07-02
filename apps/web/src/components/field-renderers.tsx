@@ -66,7 +66,7 @@ export function SelectField({
   options = [],
   readOnly = true,
 }: FieldRendererProps) {
-  const selected = value == null ? "" : String(value);
+  const selected = typeof value === "string" || typeof value === "number" ? String(value) : "";
 
   return (
     <FieldShell id={id} label={label} description={description} value={value} options={options}>
@@ -89,7 +89,10 @@ export function SelectField({
 }
 
 export function InputField({ id, label, description, value, readOnly = true }: FieldRendererProps) {
-  const displayValue = value == null ? "" : String(value);
+  const displayValue =
+    typeof value === "string" || typeof value === "number" || typeof value === "boolean"
+      ? String(value)
+      : "";
 
   return (
     <FieldShell id={id} label={label} description={description} value={value}>
