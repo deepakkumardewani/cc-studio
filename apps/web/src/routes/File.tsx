@@ -67,11 +67,11 @@ export function File() {
   }, [segment, nameParam]);
 
   if (loading) {
-    return <p className="text-stone-600">Loading file…</p>;
+    return <p className="text-text-muted">Loading file…</p>;
   }
 
   if (error) {
-    return <p className="text-red-700">{error}</p>;
+    return <p className="text-danger">{error}</p>;
   }
 
   const isJson = title.endsWith(".json");
@@ -80,23 +80,23 @@ export function File() {
     <section className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-stone-500">File</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">File</p>
           <h2 className="text-2xl font-semibold tracking-tight">{title}</h2>
         </div>
         <Link
           to="/"
-          className="text-sm font-medium text-stone-700 underline decoration-stone-300 underline-offset-4"
+          className="text-sm font-medium text-text-muted underline decoration-border-subtle underline-offset-4 hover:text-text hover:decoration-accent"
         >
           Back to list
         </Link>
       </div>
 
       {isJson ? (
-        <pre className="overflow-x-auto rounded-xl border border-stone-200 bg-white p-5 text-sm text-stone-800">
+        <pre className="overflow-x-auto rounded-xl border border-border-subtle bg-surface-raised p-5 font-mono text-sm text-text">
           {content}
         </pre>
       ) : (
-        <div className="rounded-xl border border-stone-200 bg-white p-6 shadow-sm">
+        <div className="rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-sm">
           <MarkdownView content={content} />
         </div>
       )}
