@@ -5,6 +5,7 @@ import {
   safeParseSettings,
 } from "schema";
 import { readFileText } from "../fs/scoped.js";
+import { writeSettings } from "../fs/writeSettings.js";
 
 export async function getSettingsResponse() {
   try {
@@ -52,4 +53,20 @@ export function getSettingsSchemaResponse() {
 
 export function parseSettingsForTest(input: unknown) {
   return parseSettings(input);
+}
+
+export async function putSettingsResponse(body: unknown) {
+  const result = await writeSettings(body);
+
+  if (!result.success) {
+    return {
+      status: 400 as const,
+      body: { error: "invalid settings", issues: result.issues },
+    };
+  }
+
+  return {
+    status: 200 as const,
+    body: { settings: result.settings },
+  };
 }

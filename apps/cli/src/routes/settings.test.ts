@@ -1,4 +1,4 @@
-import { mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getSettingsFieldMetadata } from "schema";
@@ -80,5 +80,70 @@ describe("/api/settings", () => {
     expect((await response.json()) as { error: string }).toEqual({
       error: "invalid JSON in settings.json",
     });
+  });
+});
+
+describe("PUT /api/settings", () => {
+  test("returns 400 and leaves disk unchanged for invalid settings", async () => {
+    await writeFile(
+      join(fixtureRoot, "settings.json"),
+      JSON.stringify({ model: "opus", effortLevel: "high" }),
+    );
+
+    const app = createApp();
+    const response = await app.request("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ effortLevel: "turbo" }),
+    });
+
+    expect(response.status).toBe(400);
+    const body = (await response.json()) as { error: string; issues?: unknown[] };
+    expect(body.error).toBe("invalid settings");
+    expect(body.issues?.length).toBeGreaterThan(0);
+
+    const current = JSON.parse(await readFile(join(fixtureRoot, "settings.json"), "utf8")) as {
+      effortLevel: string;
+    };
+    expect(current.effortLevel).toBe("high");
+  });
+
+  test("writes valid settings and creates backup", async () => {
+    await writeFile(
+      join(fixtureRoot, "settings.json"),
+      JSON.stringify({ model: "opus", alwaysThinkingEnabled: true }),
+    );
+
+    const app = createApp();
+    const response = await app.request("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ model: "sonnet", effortLevel: "low", alwaysThinkingEnabled: false }),
+    });
+
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as {
+      settings: { model: string; effortLevel: string; alwaysThinkingEnabled: boolean };
+    };
+    expect(body.settings.model).toBe("sonnet");
+    expect(body.settings.effortLevel).toBe("low");
+    expect(body.settings.alwaysThinkingEnabled).toBe(false);
+
+    const backup = JSON.parse(await readFile(join(fixtureRoot, "settings.json.bak"), "utf8")) as {
+      model: string;
+    };
+    expect(backup.model).toBe("opus");
+  });
+
+  test("returns 400 for malformed request body", async () => {
+    const app = createApp();
+    const response = await app.request("/api/settings", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: "{not-json",
+    });
+
+    expect(response.status).toBe(400);
+    expect((await response.json()) as { error: string }).toEqual({ error: "invalid JSON body" });
   });
 });
