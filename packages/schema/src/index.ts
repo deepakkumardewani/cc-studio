@@ -167,5 +167,10 @@ export function safeParseSettings(input: unknown) {
   return claudeSettingsSchema.safeParse(input);
 }
 
-export { getSettingsFieldMetadata, type FieldMetadata };
-export { SETTINGS_FIELD_METADATA } from "./metadata.js";
+export {
+  getSettingsFieldMetadata,
+  SETTINGS_GROUP_ORDER,
+  SETTINGS_FIELD_METADATA,
+  type FieldMetadata,
+  type SettingsGroup,
+} from "./metadata.js";
