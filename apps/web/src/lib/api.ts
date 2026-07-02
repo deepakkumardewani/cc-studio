@@ -32,7 +32,7 @@ export function fileHref(category: ApiCategory, name: string): string {
   if (category === "claudeMd" || category === "settings") {
     return `/${segment}`;
   }
-  return `/${segment}/${encodeURIComponent(name)}`;
+  return `/${segment}/${name.split("/").map(encodeURIComponent).join("/")}`;
 }
 
 export type TreeFile = {
