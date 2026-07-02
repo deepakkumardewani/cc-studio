@@ -1,6 +1,10 @@
 import { Hono } from "hono";
 import { getFileResponse } from "./routes/file.js";
-import { getSettingsResponse, getSettingsSchemaResponse } from "./routes/settings.js";
+import {
+  getSettingsResponse,
+  getSettingsSchemaResponse,
+  putSettingsResponse,
+} from "./routes/settings.js";
 import { getTreeResponse } from "./routes/tree.js";
 
 export function createApp() {
@@ -31,6 +35,17 @@ export function createApp() {
 
   app.get("/api/settings", async (c) => {
     const result = await getSettingsResponse();
+    return c.json(result.body, result.status);
+  });
+
+  app.put("/api/settings", async (c) => {
+    let body: unknown;
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "invalid JSON body" }, 400);
+    }
+    const result = await putSettingsResponse(body);
     return c.json(result.body, result.status);
   });
 
