@@ -14,6 +14,9 @@ export type FieldRendererProps = {
   onChange?: (value: unknown) => void;
 };
 
+const fieldControlClassName =
+  "w-full rounded-lg border border-border-subtle bg-surface px-3 py-2 text-sm text-text transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-60";
+
 function FieldShell({
   id,
   label,
@@ -22,16 +25,16 @@ function FieldShell({
   children,
 }: FieldRendererProps & { children: React.ReactNode }) {
   return (
-    <div className="space-y-2 rounded-xl border border-stone-200 bg-white p-4 shadow-sm">
+    <div className="space-y-2 rounded-xl border border-border-subtle bg-surface-raised p-4 shadow-sm">
       <div className="space-y-1">
-        <label htmlFor={id} className="text-sm font-medium text-stone-900">
+        <label htmlFor={id} className="text-sm font-medium text-text">
           {label}
         </label>
-        {description ? <p className="text-sm text-stone-600">{description}</p> : null}
+        {description ? <p className="text-sm text-text-muted">{description}</p> : null}
       </div>
       {children}
       {error ? (
-        <p className="text-sm text-red-700" role="alert">
+        <p className="text-sm text-danger" role="alert">
           {error}
         </p>
       ) : null}
@@ -68,9 +71,9 @@ export function ToggleField({
                   onChange?.(event.target.checked);
                 }
           }
-          className="size-4 rounded border-stone-300 text-stone-900"
+          className="size-4 rounded border-border-subtle text-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         />
-        <span className="text-sm text-stone-700">{checked ? "Enabled" : "Disabled"}</span>
+        <span className="text-sm text-text-muted">{checked ? "Enabled" : "Disabled"}</span>
       </label>
     </FieldShell>
   );
@@ -111,7 +114,7 @@ export function SelectField({
                 onChange?.(next === "" ? undefined : next);
               }
         }
-        className="w-full rounded-lg border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-900"
+        className={fieldControlClassName}
       >
         <option value="">Not set</option>
         {options.map((option) => (
@@ -156,7 +159,7 @@ export function InputField({
                 onChange?.(next === "" ? undefined : next);
               }
         }
-        className="w-full rounded-lg border border-stone-300 bg-stone-50 px-3 py-2 text-sm text-stone-900"
+        className={fieldControlClassName}
       />
     </FieldShell>
   );
@@ -204,7 +207,7 @@ export function JsonField({
                 }
               }
         }
-        className="w-full rounded-lg border border-stone-300 bg-stone-50 px-3 py-2 font-mono text-xs text-stone-900"
+        className={`${fieldControlClassName} font-mono text-xs`}
       />
     </FieldShell>
   );
