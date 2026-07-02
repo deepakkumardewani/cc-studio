@@ -40,83 +40,90 @@ Legend: ☐ todo · 🔶 checkpoint (human review gate)
 
 ## Phase 1 — Slice A: read a file end-to-end
 
-### T1.1 — Scoped, traversal-safe fs accessor (security keystone)
+### T1.1 — Scoped, traversal-safe fs accessor (security keystone) ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/cli/src/fs/scoped.ts`, `apps/cli/src/fs/scoped.test.ts`
 - **Do:** Implement `safePath(category, relative)` per SPEC snippet (5 categories,
   resolve + assert stays within `~/.claude`). Add `listCategory` and `readFileText`
   helpers that route through `safePath`. No writes here.
-- **Acceptance:** Only the 5 categories reachable; any `..` / absolute escape throws;
+- **Acceptance:** ✅ Only the 5 categories reachable; any `..` / absolute escape throws;
   `cache`/`sessions`/`*.db` etc. are unreachable.
-- **Verify:** `bunx vp test apps/cli` — traversal attempts throw, 5 categories resolve, ~100% coverage on `scoped.ts`.
+- **Verify:** ✅ `bunx vp test apps/cli` — traversal attempts throw, 5 categories resolve, ~100% coverage on `scoped.ts`.
 
-### T1.2 — Tree + file read API
+### T1.2 — Tree + file read API ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/cli/src/server.ts`, `apps/cli/src/routes/tree.ts`,
   `apps/cli/src/routes/file.ts`, `apps/cli/src/routes/tree.test.ts`
 - **Do:** Hono app bound to localhost. `GET /api/tree` → curated list of the 5 types;
   `GET /api/file?category=&name=` → raw markdown via `fs/scoped`. Read-only.
-- **Acceptance:** Endpoints return correct shapes; invalid category/path → 400/403, never a stack trace.
-- **Verify:** Handler tests against a temp fake `~/.claude` fixture pass; manual `bun run dev` + hitting `/api/tree` returns the 5 types.
+- **Acceptance:** ✅ Endpoints return correct shapes; invalid category/path → 400/403, never a stack trace.
+- **Verify:** ✅ Handler tests against a temp fake `~/.claude` fixture pass; manual `bun run dev` + hitting `/api/tree` returns the 5 types.
 
-### T1.3 — Web shell, router, API client
+### T1.3 — Web shell, router, API client ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/web/src/main.tsx`, `apps/web/src/routes/Layout.tsx`,
   `apps/web/src/routes/List.tsx`, `apps/web/src/lib/api.ts`, `apps/web/index.html`
 - **Do:** React Router with routes: `/` (list of 5 types), `/:category/:name` (file).
   Typed API client hitting `/api/tree` + `/api/file`. Tailwind v4 wired.
-- **Acceptance:** Home lists the 5 config types from the live API; nav renders.
-- **Verify:** `bun run dev`; browser home shows the 5 types; links route correctly.
+- **Acceptance:** ✅ Home lists the 5 config types from the live API; nav renders.
+- **Verify:** ✅ `bun run dev`; browser home shows the 5 types; links route correctly.
 
-### T1.4 — MarkdownView + file route (GFM + Shiki)
+### T1.4 — MarkdownView + file route (GFM + Shiki) ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/web/src/components/MarkdownView.tsx`,
   `apps/web/src/lib/markdown.ts`, `apps/web/src/routes/File.tsx`,
   `apps/web/src/components/MarkdownView.test.tsx`
 - **Do:** react-markdown + remark-gfm + Shiki. `File.tsx` fetches by
   category+name and renders. Deep-linkable `/skills/:name`.
-- **Acceptance:** Clicking a skill renders styled markdown with working GFM tables,
+- **Acceptance:** ✅ Clicking a skill renders styled markdown with working GFM tables,
   task lists, and syntax-highlighted code blocks.
-- **Verify:** Component test renders GFM table + code block; deep link `/skills/<name>` loads directly in browser.
+- **Verify:** ✅ Component test renders GFM table + code block; deep link `/skills/<name>` loads directly in browser.
 
-### 🔶 Checkpoint 1
+### 🔶 Checkpoint 1 ✅
 
-Lists 5 types · renders a skill as GFM markdown · deep link works · traversal test green.
+✅ Lists 5 types · ✅ renders a skill as GFM markdown · ✅ deep link works · ✅ traversal test green.
 **Stop for review.** (SPEC Success Criteria 2, 3, 6)
 
 ---
 
 ## Phase 2 — Slice B: view settings
 
-### T2.1 — Shared Zod settings schema + field metadata
+### T2.1 — Shared Zod settings schema + field metadata ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `packages/schema/src/index.ts`, `packages/schema/src/metadata.ts`,
   `packages/schema/src/index.test.ts`
 - **Do:** Author Zod schema for Claude Code `settings.json` from the live settings docs.
   Attach per-field metadata (label, description, control type: toggle/select/input, enum options).
-- **Acceptance:** Schema accepts known-good configs, rejects wrong types/invalid values, round-trips.
-- **Verify:** `bunx vp test packages/schema` — valid accepted, invalid rejected, round-trip stable.
+- **Acceptance:** ✅ Schema accepts known-good configs, rejects wrong types/invalid values, round-trips.
+- **Verify:** ✅ `bunx vp test packages/schema` — valid accepted, invalid rejected, round-trip stable.
 
-### T2.2 — Settings read API
+### T2.2 — Settings read API ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/cli/src/routes/settings.ts`, `apps/cli/src/routes/settings.test.ts`
 - **Do:** `GET /api/settings` (parsed current settings.json via `fs/scoped`) and
   `GET /api/settings/schema` (schema metadata for the form). Depends on `packages/schema`.
-- **Acceptance:** Returns parsed settings + schema metadata; missing file → sensible empty default.
-- **Verify:** Handler tests against fake `~/.claude` fixture; `/api/settings/schema` lists every key.
+- **Acceptance:** ✅ Returns parsed settings + schema metadata; missing file → sensible empty default.
+- **Verify:** ✅ Handler tests against fake `~/.claude` fixture; `/api/settings/schema` lists every key.
 
-### T2.3 — Settings view route (read-only)
+### T2.3 — Settings view route (read-only) ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/web/src/routes/Settings.tsx`,
   `apps/web/src/components/field-renderers.tsx`
 - **Do:** Fetch schema + values; render every setting with name, description, and the
   appropriate control (toggle/select/input) in read-only display mode.
-- **Acceptance:** Every schema key shown with its control and description.
-- **Verify:** `bun run dev` → `/settings` shows all keys; component test: boolean→toggle, enum→select.
+- **Acceptance:** ✅ Every schema key shown with its control and description.
+- **Verify:** ✅ `bun run dev` → `/settings` shows all keys; component test: boolean→toggle, enum→select.
 
-### 🔶 Checkpoint 2
+### 🔶 Checkpoint 2 ✅
 
-Settings view shows **every** setting with name, description, control. (SPEC Success Criterion 4)
+✅ Settings view shows **every** setting with name, description, control. (SPEC Success Criterion 4)
 **Stop for review.**
 
 ---
