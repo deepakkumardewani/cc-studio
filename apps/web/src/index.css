@@ -71,6 +71,16 @@
     color: var(--text);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  .markdown-view > :first-child {
+    margin-top: 0;
+  }
+
+  .dark .markdown-view p,
+  .dark .markdown-view li {
+    line-height: 1.8;
   }
 
   :focus-visible {

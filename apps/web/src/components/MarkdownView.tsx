@@ -1,22 +1,38 @@
 import { isValidElement, useEffect, useState, type ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { highlightCode } from "../lib/markdown";
+import { highlightCode, shikiThemeFor } from "../lib/markdown";
+import { useTheme } from "../lib/theme";
 
 type CodeProps = {
   className?: string;
   children?: ReactNode;
 };
 
+function codeText(children: ReactNode): string {
+  if (typeof children === "string") {
+    return children.replace(/\n$/, "");
+  }
+  if (Array.isArray(children)) {
+    return children
+      .map((child) => (typeof child === "string" ? child : ""))
+      .join("")
+      .replace(/\n$/, "");
+  }
+  return "";
+}
+
 function CodeBlock({ className, children }: CodeProps) {
-  const code = String(children ?? "").replace(/\n$/, "");
+  const code = codeText(children);
   const language = className?.replace("language-", "") ?? "plaintext";
+  const { theme } = useTheme();
+  const shikiTheme = shikiThemeFor(theme);
   const [html, setHtml] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    highlightCode(code, language)
+    highlightCode(code, language, shikiTheme)
       .then((result) => {
         if (!cancelled) {
           setHtml(result);
@@ -31,11 +47,11 @@ function CodeBlock({ className, children }: CodeProps) {
     return () => {
       cancelled = true;
     };
-  }, [code, language]);
+  }, [code, language, shikiTheme]);
 
   if (!html) {
     return (
-      <pre className="overflow-x-auto rounded-lg bg-stone-950 p-4 text-sm text-stone-100">
+      <pre className="overflow-x-auto rounded-lg bg-surface-raised p-4 font-mono text-sm text-text-muted ring-1 ring-border-subtle">
         <code>{code}</code>
       </pre>
     );
@@ -43,7 +59,7 @@ function CodeBlock({ className, children }: CodeProps) {
 
   return (
     <div
-      className="overflow-x-auto rounded-lg [&_pre]:m-0 [&_pre]:bg-stone-950 [&_pre]:p-4"
+      className="overflow-x-auto rounded-lg ring-1 ring-border-subtle [&_pre]:m-0 [&_pre]:bg-surface-raised [&_pre]:p-4"
       dangerouslySetInnerHTML={{ __html: html }}
     />
   );
@@ -58,7 +74,9 @@ function markdownCode(props: CodeProps) {
   }
 
   return (
-    <code className="rounded bg-stone-100 px-1.5 py-0.5 text-sm text-stone-800">{children}</code>
+    <code className="rounded bg-surface px-1.5 py-0.5 font-mono text-[0.9em] text-accent ring-1 ring-border-subtle">
+      {children}
+    </code>
   );
 }
 
@@ -68,27 +86,37 @@ type MarkdownViewProps = {
 
 export function MarkdownView({ content }: MarkdownViewProps) {
   return (
-    <article className="markdown-view space-y-4 text-stone-800">
+    <article className="markdown-view">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
           h1: ({ children }) => (
-            <h1 className="text-3xl font-semibold tracking-tight text-stone-900">{children}</h1>
+            <h1 className="border-b border-border-subtle pb-3 text-3xl font-semibold tracking-tight text-text">
+              {children}
+            </h1>
           ),
           h2: ({ children }) => (
-            <h2 className="mt-8 text-2xl font-semibold tracking-tight text-stone-900">
+            <h2 className="mt-10 scroll-mt-6 text-xl font-semibold tracking-tight text-text">
               {children}
             </h2>
           ),
           h3: ({ children }) => (
-            <h3 className="mt-6 text-xl font-semibold text-stone-900">{children}</h3>
+            <h3 className="mt-8 scroll-mt-6 text-lg font-semibold text-text">{children}</h3>
           ),
-          p: ({ children }) => <p className="leading-7 text-stone-700">{children}</p>,
+          h4: ({ children }) => (
+            <h4 className="mt-6 text-base font-semibold text-text">{children}</h4>
+          ),
+          p: ({ children }) => <p className="mt-4 leading-[1.75] text-text-muted">{children}</p>,
+          strong: ({ children }) => <strong className="font-semibold text-text">{children}</strong>,
           ul: ({ children }) => (
-            <ul className="list-disc space-y-2 pl-6 text-stone-700">{children}</ul>
+            <ul className="mt-4 list-disc space-y-2 pl-6 text-text-muted marker:text-accent">
+              {children}
+            </ul>
           ),
           ol: ({ children }) => (
-            <ol className="list-decimal space-y-2 pl-6 text-stone-700">{children}</ol>
+            <ol className="mt-4 list-decimal space-y-2 pl-6 text-text-muted marker:text-accent">
+              {children}
+            </ol>
           ),
           li: ({ children }) => {
             const childList = Array.isArray(children) ? children : [children];
@@ -99,11 +127,18 @@ export function MarkdownView({ content }: MarkdownViewProps) {
               return child.props.type === "checkbox";
             });
             return (
-              <li className={hasTask ? "list-none -ml-6 flex items-start gap-2" : undefined}>
+              <li
+                className={
+                  hasTask
+                    ? "list-none -ml-6 flex items-start gap-2 leading-[1.75] text-text-muted"
+                    : "leading-[1.75]"
+                }
+              >
                 {children}
               </li>
             );
           },
+          hr: () => <hr className="my-8 border-border-subtle" />,
           input: ({ type, checked, disabled }) =>
             type === "checkbox" ? (
               <input
@@ -111,32 +146,30 @@ export function MarkdownView({ content }: MarkdownViewProps) {
                 checked={checked}
                 disabled={disabled}
                 readOnly
-                className="mt-1 h-4 w-4 rounded border-stone-300"
+                className="mt-1 h-4 w-4 rounded border-border-subtle accent-accent"
               />
             ) : null,
           table: ({ children }) => (
-            <div className="overflow-x-auto">
+            <div className="mt-6 overflow-x-auto rounded-lg ring-1 ring-border-subtle">
               <table className="min-w-full border-collapse text-left text-sm">{children}</table>
             </div>
           ),
           thead: ({ children }) => (
-            <thead className="border-b border-stone-200 bg-stone-50">{children}</thead>
+            <thead className="border-b border-border-subtle bg-surface-raised">{children}</thead>
           ),
-          th: ({ children }) => (
-            <th className="px-4 py-3 font-semibold text-stone-900">{children}</th>
-          ),
+          th: ({ children }) => <th className="px-4 py-3 font-semibold text-text">{children}</th>,
           td: ({ children }) => (
-            <td className="border-t border-stone-200 px-4 py-3 text-stone-700">{children}</td>
+            <td className="border-t border-border-subtle px-4 py-3 text-text-muted">{children}</td>
           ),
           blockquote: ({ children }) => (
-            <blockquote className="border-l-4 border-stone-300 pl-4 italic text-stone-600">
+            <blockquote className="mt-4 rounded-lg bg-surface-raised px-4 py-3 text-text-muted ring-1 ring-border-subtle">
               {children}
             </blockquote>
           ),
           a: ({ href, children }) => (
             <a
               href={href}
-              className="font-medium text-stone-900 underline decoration-stone-400 underline-offset-4"
+              className="font-medium text-accent underline decoration-accent/40 underline-offset-4 hover:decoration-accent"
             >
               {children}
             </a>

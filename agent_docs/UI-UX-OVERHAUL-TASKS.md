@@ -84,7 +84,7 @@ light↔dark; no hardcoded-color regressions; `bunx vp check` green.
 
 ### T A.1 — `buildTree` util (flat paths → nested tree)
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/lib/tree.ts`, `apps/web/src/lib/tree.test.ts`
 - **Do:** Pure function turning a `TreeCategory`'s flat `files[]` (slash-delimited
   `name`) into a nested `{ folders, files }` structure per category, sorted
@@ -97,7 +97,7 @@ light↔dark; no hardcoded-color regressions; `bunx vp check` green.
 
 ### T A.2 — `FileTree` component (collapsible, icons, a11y)
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/components/FileTree.tsx`, `apps/web/src/components/FileTree.test.tsx`
 - **Do:** Render the `buildTree` output: collapsible folders (chevron + folder
   icon), file leaves (file icon), single click on a leaf navigates, active file
@@ -111,7 +111,7 @@ light↔dark; no hardcoded-color regressions; `bunx vp check` green.
 
 ### T A.3 — Two-pane shell + landing state
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/routes/Layout.tsx`, `apps/web/src/routes/List.tsx`
 - **Do:** Restructure `Layout` into header + persistent sidebar (`FileTree`, fed
   by `fetchTree`) + content `<Outlet/>`. Repurpose `List` as the `/` landing pane
@@ -123,7 +123,7 @@ light↔dark; no hardcoded-color regressions; `bunx vp check` green.
   skills via sidebar; deep-link a file directly.
 - **Scope:** M · **Deps:** T A.2
 
-### 🔶 Checkpoint A
+### 🔶 Checkpoint A — ☑ Complete
 
 Sidebar groups every category into folders/files with icons; single click opens;
 active highlighting; deep links intact; keyboard-navigable. **Stop for review.**
