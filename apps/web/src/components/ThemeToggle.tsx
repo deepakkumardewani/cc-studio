@@ -44,10 +44,23 @@ export function ThemeToggle() {
       type="button"
       aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
       aria-pressed={isDark}
-      className="inline-flex size-9 items-center justify-center rounded-lg text-text-muted transition-colors hover:bg-surface hover:text-text"
+      className="inline-flex size-8 items-center justify-center rounded-md text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       onClick={toggle}
     >
-      {isDark ? <SunIcon /> : <MoonIcon />}
+      <span className="relative size-5">
+        <span
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isDark ? "opacity-100" : "opacity-0"}`}
+          aria-hidden="true"
+        >
+          <SunIcon />
+        </span>
+        <span
+          className={`absolute inset-0 flex items-center justify-center transition-opacity duration-200 ${isDark ? "opacity-0" : "opacity-100"}`}
+          aria-hidden="true"
+        >
+          <MoonIcon />
+        </span>
+      </span>
     </button>
   );
 }

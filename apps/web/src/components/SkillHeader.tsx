@@ -1,5 +1,7 @@
 type SkillHeaderProps = {
   data: Record<string, string>;
+  fallbackTitle?: string;
+  badge?: React.ReactNode;
 };
 
 function displayValue(value: string): string {
@@ -21,8 +23,8 @@ function SkillChip({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function SkillHeader({ data }: SkillHeaderProps) {
-  const title = data.name ?? "Untitled skill";
+export function SkillHeader({ data, fallbackTitle, badge }: SkillHeaderProps) {
+  const title = data.name ?? fallbackTitle ?? "Untitled skill";
   const description = data.description;
   const userInvocable = data["user-invocable"];
   const argumentHint = data["argument-hint"];
@@ -41,7 +43,10 @@ export function SkillHeader({ data }: SkillHeaderProps) {
 
   return (
     <header className="border-b border-border-subtle pb-6">
-      <h1 className="text-3xl font-semibold tracking-tight text-text">{title}</h1>
+      <div className="flex items-center gap-3">
+        <h1 className="text-3xl font-semibold tracking-tight text-text">{title}</h1>
+        {badge}
+      </div>
       {description ? (
         <p className="mt-3 text-base leading-relaxed text-text-muted">{description}</p>
       ) : null}

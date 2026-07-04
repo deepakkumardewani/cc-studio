@@ -81,7 +81,7 @@ test("FileTree renders single-file categories as direct links", () => {
   renderTree();
 
   expect(screen.getByRole("link", { name: "CLAUDE.md" })).toBeTruthy();
-  expect(screen.getByRole("link", { name: "Settings" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "settings.json" })).toBeTruthy();
   expect(screen.queryByRole("button", { name: /Expand CLAUDE.md/i })).toBeNull();
 });
 
@@ -126,4 +126,30 @@ test("FileTree auto-expands categories and folders for the active route", () => 
   expect(screen.getByRole("button", { name: "Collapse Skills" })).toBeTruthy();
   expect(screen.getByRole("link", { name: "SKILL.md" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Collapse colorize" })).toBeTruthy();
+});
+
+test("FileTree renders folder categories before single-file categories regardless of input order", () => {
+  const reordered: TreeCategory[] = [
+    { category: "claudeMd", label: "CLAUDE.md", files: [{ name: "CLAUDE.md" }] },
+    { category: "settings", label: "Settings", files: [{ name: "settings.json" }] },
+    {
+      category: "skills",
+      label: "Skills",
+      files: [{ name: "alpha.md" }],
+    },
+  ];
+
+  render(
+    <MemoryRouter initialEntries={["/"]}>
+      <Routes>
+        <Route path="*" element={<FileTree categories={reordered} />} />
+      </Routes>
+    </MemoryRouter>,
+  );
+
+  const nav = screen.getByRole("navigation", { name: "Config files" });
+  const labels = [...nav.querySelectorAll("span.truncate")].map((el) => el.textContent);
+
+  expect(labels.indexOf("Skills")).toBeLessThan(labels.indexOf("CLAUDE.md"));
+  expect(labels.indexOf("Skills")).toBeLessThan(labels.indexOf("settings.json"));
 });
