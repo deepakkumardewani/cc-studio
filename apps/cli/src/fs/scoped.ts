@@ -1,8 +1,16 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { mkdir, readdir, readFile, stat, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join, resolve, sep } from "node:path";
 
-export const CATEGORY_IDS = ["skills", "plans", "commands", "claudeMd", "settings"] as const;
+export const CATEGORY_IDS = [
+  "skills",
+  "plans",
+  "commands",
+  "claudeMd",
+  "settings",
+  "agents",
+  "plugins",
+] as const;
 
 export type Category = (typeof CATEGORY_IDS)[number];
 
@@ -18,6 +26,8 @@ export const CATEGORY_META: CategoryMeta[] = [
   { id: "commands", label: "Commands", routeSegment: "commands" },
   { id: "claudeMd", label: "CLAUDE.md", routeSegment: "claude-md" },
   { id: "settings", label: "Settings", routeSegment: "settings" },
+  { id: "agents", label: "Agents", routeSegment: "agents" },
+  { id: "plugins", label: "Plugins", routeSegment: "plugins" },
 ];
 
 function getRoot(): string {
@@ -31,6 +41,8 @@ function getCategories(root: string): Record<Category, string> {
     commands: resolve(root, "commands"),
     claudeMd: resolve(root, "CLAUDE.md"),
     settings: resolve(root, "settings.json"),
+    agents: resolve(root, "agents"),
+    plugins: resolve(root, "plugins"),
   };
 }
 
@@ -90,6 +102,28 @@ async function walkMarkdownFiles(dir: string, prefix = ""): Promise<string[]> {
   return files.sort();
 }
 
+async function walkAllFiles(dir: string, prefix = ""): Promise<string[]> {
+  let entries: string[];
+  try {
+    entries = await readdir(dir);
+  } catch {
+    return [];
+  }
+
+  const files: string[] = [];
+  for (const entry of entries) {
+    const relativePath = prefix ? join(prefix, entry) : entry;
+    const absolutePath = join(dir, entry);
+    const entryStat = await stat(absolutePath);
+    if (entryStat.isDirectory()) {
+      files.push(...(await walkAllFiles(absolutePath, relativePath)));
+      continue;
+    }
+    files.push(relativePath);
+  }
+  return files.sort();
+}
+
 export async function listCategory(category: Category): Promise<string[]> {
   if (category === "claudeMd") {
     try {
@@ -109,12 +143,27 @@ export async function listCategory(category: Category): Promise<string[]> {
     }
   }
 
+  if (category === "plugins") {
+    return walkAllFiles(safePath(category));
+  }
+
   return walkMarkdownFiles(safePath(category));
 }
 
 export async function readFileText(category: Category, relative: string): Promise<string> {
   const path = safePath(category, relative);
   return readFile(path, "utf8");
+}
+
+export async function writeFileText(
+  category: Category,
+  relative: string,
+  content: string,
+): Promise<void> {
+  const path = safePath(category, relative);
+  const dir = path.substring(0, path.lastIndexOf("/"));
+  await mkdir(dir, { recursive: true });
+  await writeFile(path, content, "utf8");
 }
 
 export async function listAllCategories(): Promise<

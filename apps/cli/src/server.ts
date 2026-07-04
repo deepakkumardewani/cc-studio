@@ -1,10 +1,12 @@
 import { Hono } from "hono";
-import { getFileResponse } from "./routes/file.js";
+import { getContextResponse } from "./routes/context.js";
+import { getFileResponse, postFileResponse } from "./routes/file.js";
 import {
   getSettingsResponse,
   getSettingsSchemaResponse,
   putSettingsResponse,
 } from "./routes/settings.js";
+import { getSkillsResponse } from "./routes/skills.js";
 import { getTreeResponse } from "./routes/tree.js";
 
 export function createApp() {
@@ -26,6 +28,32 @@ export function createApp() {
       return c.json(result.body);
     }
     return c.json(result.body, result.status);
+  });
+
+  app.post("/api/file", async (c) => {
+    const category = c.req.query("category") ?? "";
+    const name = c.req.query("name") ?? "";
+    let body: { content?: string };
+    try {
+      body = await c.req.json();
+    } catch {
+      return c.json({ error: "invalid JSON body" }, 400);
+    }
+    if (typeof body.content !== "string") {
+      return c.json({ error: "content must be a string" }, 400);
+    }
+    const result = await postFileResponse(category, name, body.content);
+    return c.json(result.body, result.status);
+  });
+
+  app.get("/api/skills", async (c) => {
+    const result = await getSkillsResponse();
+    return c.json(result);
+  });
+
+  app.get("/api/context", async (c) => {
+    const result = await getContextResponse();
+    return c.json(result);
   });
 
   app.get("/api/settings/schema", (c) => {
