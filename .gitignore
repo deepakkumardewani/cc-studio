@@ -31,3 +31,5 @@ dist-ssr
 .verification-screenshots/
 
 *.tsbuildinfo
+
+agent_docs/

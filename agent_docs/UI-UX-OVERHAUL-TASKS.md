@@ -182,7 +182,7 @@ both themes. **Stop for review.**
 
 ### T C.1 — Add `group` to schema field metadata
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `packages/schema/src/metadata.ts`, `packages/schema/src/index.test.ts`
 - **Do:** Add a `group` label to each field's metadata (e.g. General, Permissions,
   Hooks, Status Line, Plugins & Marketplaces, MCP Servers, Auth & Env, Advanced).
@@ -195,7 +195,7 @@ both themes. **Stop for review.**
 
 ### T C.2 — Grouped Settings layout (sticky left section-nav)
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/routes/Settings.tsx`, `apps/web/src/components/SettingsForm.tsx`
 - **Do:** Group fields by `group`; render a sticky left sub-nav of section names
   (scroll-to / active-section highlight) with sections on the right, each a short
@@ -208,7 +208,7 @@ both themes. **Stop for review.**
 
 ### T C.3 — Theme + polish field renderers
 
-- ☐ **Impl** · ☐ **Test**
+- ☑ **Impl** · ☑ **Test**
 - **Files:** `apps/web/src/components/field-renderers.tsx`, `apps/web/src/components/field-renderers.test.tsx`
 - **Do:** Migrate every renderer (toggle, select, input, array, etc.) to tokens;
   consistent labels/description/error styling; correct focus states in both themes.
@@ -218,7 +218,7 @@ both themes. **Stop for review.**
   value + save in dark mode.
 - **Scope:** M · **Deps:** T C.2
 
-### 🔶 Checkpoint C
+### 🔶 Checkpoint C — ☑ Complete
 
 Settings has a section nav; each section is a short screen; every key present;
 edit + save works. (Bug #6 addressed.) **Stop for review.**
