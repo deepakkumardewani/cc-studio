@@ -16,12 +16,12 @@ test("boolean field renders as toggle", () => {
     />,
   );
 
-  expect(html).toContain('type="checkbox"');
+  expect(html).toContain('role="switch"');
   expect(html).toContain("checked");
   expect(html).toContain("Always Thinking Enabled");
 });
 
-test("enum field renders as select", () => {
+test("enum field renders as custom dropdown", () => {
   const html = renderToStaticMarkup(
     <ReadOnlyField
       field={{
@@ -39,8 +39,8 @@ test("enum field renders as select", () => {
     />,
   );
 
-  expect(html).toContain("<select");
-  expect(html).toContain('value="high"');
+  expect(html).toContain('aria-haspopup="listbox"');
+  expect(html).toContain("high");
   expect(html).toContain("Effort Level");
 });
 

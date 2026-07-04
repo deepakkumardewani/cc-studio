@@ -44,12 +44,11 @@ test("boolean field renders as editable toggle", () => {
     />,
   );
 
-  const toggle = screen.getByLabelText("Always Thinking Enabled");
-  expect(toggle).toHaveProperty("type", "checkbox");
+  const toggle = screen.getByRole("switch", { name: "Always Thinking Enabled" });
   expect((toggle as HTMLInputElement).checked).toBe(true);
 });
 
-test("enum field renders as editable select", () => {
+test("enum field renders as custom dropdown", () => {
   render(
     <SettingsForm
       fields={sampleFields}
@@ -58,9 +57,23 @@ test("enum field renders as editable select", () => {
     />,
   );
 
-  const select = screen.getByLabelText("Effort Level");
-  expect(select.tagName).toBe("SELECT");
-  expect((select as HTMLSelectElement).value).toBe("high");
+  const trigger = screen.getByLabelText("Effort Level");
+  expect(trigger.tagName).toBe("BUTTON");
+  expect(trigger.textContent).toContain("high");
+});
+
+test("save button is disabled until a setting changes", () => {
+  render(
+    <SettingsForm
+      fields={sampleFields}
+      defaultValues={{ alwaysThinkingEnabled: false, effortLevel: "high" }}
+      onSubmit={vi.fn()}
+    />,
+  );
+
+  expect(screen.getByRole("button", { name: "Save settings" })).toHaveProperty("disabled", true);
+  fireEvent.click(screen.getByRole("switch", { name: "Always Thinking Enabled" }));
+  expect(screen.getByRole("button", { name: "Save settings" })).toHaveProperty("disabled", false);
 });
 
 test("invalid enum value surfaces inline error and blocks submit", async () => {
@@ -74,6 +87,7 @@ test("invalid enum value surfaces inline error and blocks submit", async () => {
     />,
   );
 
+  fireEvent.click(screen.getByRole("switch", { name: "Always Thinking Enabled" }));
   fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
 
   await waitFor(() => {
@@ -123,7 +137,7 @@ test("valid submit calls onSubmit with parsed values", async () => {
     />,
   );
 
-  fireEvent.click(screen.getByLabelText("Always Thinking Enabled"));
+  fireEvent.click(screen.getByRole("switch", { name: "Always Thinking Enabled" }));
   fireEvent.click(screen.getByRole("button", { name: "Save settings" }));
 
   await waitFor(() => {
@@ -146,6 +160,61 @@ test("renders grouped section navigation", () => {
   expect(screen.getByRole("navigation", { name: "Settings sections" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "General" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Permissions" })).toBeTruthy();
-  expect(screen.getByRole("heading", { name: "General" })).toBeTruthy();
-  expect(screen.getByRole("heading", { name: "Permissions" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: /General \(\d+\)/ })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: /Permissions \(\d+\)/ })).toBeTruthy();
+});
+
+test("filters settings by search query", () => {
+  render(
+    <SettingsForm
+      fields={sampleFields}
+      defaultValues={{ alwaysThinkingEnabled: false, effortLevel: "high" }}
+      onSubmit={vi.fn()}
+    />,
+  );
+
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search settings" }), {
+    target: { value: "permissions" },
+  });
+
+  expect(screen.queryByRole("heading", { name: /General \(\d+\)/ })).toBeNull();
+  expect(screen.getByRole("heading", { name: /Permissions \(\d+\)/ })).toBeTruthy();
+  expect(screen.getByText("1 result")).toBeTruthy();
+});
+
+test("search highlights matching field key and description", () => {
+  render(
+    <SettingsForm
+      fields={sampleFields}
+      defaultValues={{ alwaysThinkingEnabled: false, effortLevel: "high" }}
+      onSubmit={vi.fn()}
+    />,
+  );
+
+  fireEvent.change(screen.getByRole("searchbox", { name: "Search settings" }), {
+    target: { value: "effort" },
+  });
+
+  expect(screen.getAllByText("effort").length).toBeGreaterThan(0);
+  expect(screen.getByText("Effort")).toBeTruthy();
+  expect(screen.queryByText("effortLevel")).toBeNull();
+  expect(document.querySelectorAll("mark").length).toBeGreaterThan(0);
+});
+
+test("Overrides group appears in navigation when field has Overrides group", () => {
+  const fieldsWithOverrides = [
+    ...sampleFields,
+    {
+      key: "skillOverrides",
+      label: "Skill Overrides",
+      description: "Disable specific skills to reduce context bloat.",
+      control: "json" as const,
+      group: "Overrides",
+    },
+  ];
+
+  render(<SettingsForm fields={fieldsWithOverrides} defaultValues={{}} onSubmit={vi.fn()} />);
+
+  expect(screen.getByRole("button", { name: "Overrides" })).toBeTruthy();
+  expect(screen.getByRole("heading", { name: /Overrides \(\d+\)/ })).toBeTruthy();
 });

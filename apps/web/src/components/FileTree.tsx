@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import type { TreeCategory } from "../lib/api";
+import { getCategoryMeta } from "../lib/categories";
 import { buildTree, type TreeFile, type TreeNode } from "../lib/tree";
 
 const OPEN_FOLDERS_KEY = "cc-studio-tree-open";
@@ -186,7 +187,7 @@ function TreeBranch({
         <span className="truncate font-medium">{node.name}</span>
       </button>
       {isOpen ? (
-        <ul role="group" className="ml-3 border-l border-border-subtle pl-1">
+        <ul role="group" className="animate-slide-down ml-3 border-l border-border-subtle pl-1">
           {node.children.map((child) => (
             <TreeBranch
               key={child.kind === "folder" ? `folder:${path}/${child.name}` : `file:${child.href}`}
@@ -215,10 +216,12 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
   const activeHref = location.pathname;
   const [openFolders, setOpenFolders] = useState(loadOpenFolders);
 
-  const trees = useMemo(
-    () => categories.map((category) => ({ category, nodes: buildTree(category) })),
-    [categories],
-  );
+  const trees = useMemo(() => {
+    const built = categories.map((category) => ({ category, nodes: buildTree(category) }));
+    const folderTrees = built.filter((tree) => !isSingleFileCategory(tree.nodes));
+    const singleFileTrees = built.filter((tree) => isSingleFileCategory(tree.nodes));
+    return [...folderTrees, ...singleFileTrees];
+  }, [categories]);
 
   useEffect(() => {
     setOpenFolders((current) => {
@@ -296,7 +299,7 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
               }
             >
               <FileIcon />
-              <span className="truncate">{category.label}</span>
+              <span className="truncate">{file.name}</span>
             </NavLink>
           );
         }
@@ -314,13 +317,20 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
               onClick={() => handleToggle(catOpenKey)}
             >
               <ChevronIcon expanded={isCategoryOpen} />
+              <span
+                className={`size-2 shrink-0 rounded-full ${getCategoryMeta(category.category).colorToken}`}
+              />
               <span className="truncate">{category.label}</span>
             </button>
             {isCategoryOpen ? (
               nodes.length === 0 ? (
                 <p className="px-3 py-1 text-sm text-text-muted">No files</p>
               ) : (
-                <ul role="tree" aria-label={category.label} className="mt-0.5 space-y-0.5 pl-1">
+                <ul
+                  role="tree"
+                  aria-label={category.label}
+                  className="animate-slide-down mt-0.5 space-y-0.5 pl-1"
+                >
                   {nodes.map((node) => (
                     <TreeBranch
                       key={node.kind === "folder" ? `folder:${node.name}` : `file:${node.href}`}
