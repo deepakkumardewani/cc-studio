@@ -4,6 +4,8 @@ export const ROUTE_TO_CATEGORY = {
   commands: "commands",
   "claude-md": "claudeMd",
   settings: "settings",
+  agents: "agents",
+  plugins: "plugins",
 } as const;
 
 export type RouteSegment = keyof typeof ROUTE_TO_CATEGORY;
@@ -62,6 +64,7 @@ export type SettingsField = {
   control: "toggle" | "select" | "input" | "json";
   group: string;
   options?: Array<{ value: string; label: string }>;
+  placeholder?: string;
 };
 
 export type SettingsSchemaResponse = {
@@ -70,6 +73,16 @@ export type SettingsSchemaResponse = {
 
 export type SettingsResponse = {
   settings: Record<string, unknown>;
+};
+
+export type SkillEntry = {
+  name: string;
+  label: string;
+  value: string;
+};
+
+export type SkillsResponse = {
+  skills: SkillEntry[];
 };
 
 async function parseJson<T>(response: Response): Promise<T> {
@@ -94,6 +107,24 @@ export async function fetchSettingsSchema(): Promise<SettingsSchemaResponse> {
 
 export async function fetchSettings(): Promise<SettingsResponse> {
   return parseJson<SettingsResponse>(await fetch("/api/settings"));
+}
+
+export async function fetchSkills(): Promise<SkillsResponse> {
+  return parseJson<SkillsResponse>(await fetch("/api/skills"));
+}
+
+export type ContextEntry = {
+  category: string;
+  tokens: number;
+  percentage: number;
+};
+
+export type ContextResponse =
+  | { success: true; breakdown: ContextEntry[]; total: number }
+  | { success: false; error: string };
+
+export async function fetchContext(): Promise<ContextResponse> {
+  return parseJson<ContextResponse>(await fetch("/api/context"));
 }
 
 export async function updateSettings(settings: Record<string, unknown>): Promise<SettingsResponse> {
