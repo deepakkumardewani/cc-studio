@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { MarkdownView } from "../components/MarkdownView";
 import { SkillHeader } from "../components/SkillHeader";
-import { fetchFile, isRouteSegment, routeToCategory, type ApiCategory } from "../lib/api";
+import { fetchFile, fileHref, isRouteSegment, routeToCategory, type ApiCategory } from "../lib/api";
 import { parseFrontmatter } from "../lib/frontmatter";
+import { recordRecent } from "../lib/recent";
+import { CATEGORY_LABELS, deriveFileLabel, deriveTitleFromFilename } from "../lib/workspace";
 
 function resolveName(category: ApiCategory, nameParam?: string): string {
   if (category === "claudeMd") {
@@ -50,6 +52,12 @@ export function File() {
         if (!cancelled) {
           setContent(file.content);
           setTitle(file.name);
+          const isFileCategory = category === "claudeMd" || category === "settings";
+          recordRecent({
+            href: fileHref(category, file.name),
+            label: isFileCategory ? CATEGORY_LABELS[category] : deriveFileLabel(file.name),
+            categoryLabel: CATEGORY_LABELS[category],
+          });
         }
       })
       .catch(() => {
@@ -80,29 +88,35 @@ export function File() {
   const { data, body, hasFrontmatter } = parseFrontmatter(content);
   const markdownContent = hasFrontmatter ? body : content;
 
+  const category = segment && isRouteSegment(segment) ? routeToCategory(segment) : null;
+  const isPlugin = category === "plugins";
+  const isCommandOrAgent = category === "commands" || category === "agents";
+
+  const fallbackTitle = isCommandOrAgent ? deriveTitleFromFilename(title) : undefined;
+  const showHeader = hasFrontmatter || Boolean(fallbackTitle);
+  const pluginBadge = isPlugin ? (
+    <span className="inline-flex items-center rounded-full bg-surface px-3 py-1 text-xs font-medium text-text-muted ring-1 ring-border-subtle">
+      View only
+    </span>
+  ) : null;
+
   return (
     <article className="mx-auto max-w-[70ch]">
-      <Link
-        to="/"
-        className="inline-flex items-center gap-1.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
-      >
-        <span aria-hidden="true">←</span>
-        Back to list
-      </Link>
+      {showHeader ? (
+        <SkillHeader data={data} fallbackTitle={fallbackTitle} badge={pluginBadge} />
+      ) : isPlugin ? (
+        <div className="mb-4 flex">{pluginBadge}</div>
+      ) : null}
 
-      <div className="mt-6 rounded-xl border border-border-subtle bg-surface-raised p-6 shadow-sm">
-        {hasFrontmatter ? <SkillHeader data={data} /> : null}
-
-        {isJson ? (
-          <pre className="overflow-x-auto rounded-lg bg-surface p-5 font-mono text-sm text-text-muted ring-1 ring-border-subtle">
-            {content}
-          </pre>
-        ) : (
-          <div className={hasFrontmatter ? "mt-6" : undefined}>
-            <MarkdownView content={markdownContent} />
-          </div>
-        )}
-      </div>
+      {isJson ? (
+        <pre className="overflow-x-auto rounded-lg bg-surface-raised p-5 font-mono text-sm text-text-muted ring-1 ring-border-subtle">
+          {content}
+        </pre>
+      ) : (
+        <div className={showHeader ? "mt-6" : undefined}>
+          <MarkdownView content={markdownContent} />
+        </div>
+      )}
     </article>
   );
 }

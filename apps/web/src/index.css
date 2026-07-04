@@ -5,6 +5,7 @@
 @theme inline {
   --color-surface: var(--surface);
   --color-surface-raised: var(--surface-raised);
+  --color-surface-soft: var(--surface-soft);
   --color-text: var(--text);
   --color-text-muted: var(--text-muted);
   --color-border-subtle: var(--border-subtle);
@@ -14,47 +15,97 @@
   --color-danger: var(--danger);
   --color-ring: var(--ring);
 
-  --radius-sm: 0.25rem;
-  --radius-md: 0.625rem;
-  --radius-lg: 0.75rem;
-  --radius-xl: 1rem;
+  --color-cat-skills: var(--cat-skills);
+  --color-cat-plans: var(--cat-plans);
+  --color-cat-commands: var(--cat-commands);
+  --color-cat-claudemd: var(--cat-claudemd);
+  --color-cat-settings: var(--cat-settings);
+  --color-cat-agents: var(--cat-agents);
+  --color-cat-plugins: var(--cat-plugins);
+
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
 
   --shadow-sm: 0 1px 2px 0 rgb(28 25 23 / 0.05);
   --shadow-md: 0 4px 6px -1px rgb(28 25 23 / 0.07), 0 2px 4px -2px rgb(28 25 23 / 0.05);
   --shadow-lg: 0 10px 15px -3px rgb(28 25 23 / 0.08), 0 4px 6px -4px rgb(28 25 23 / 0.05);
 
+  --animate-fade-in: fade-in 250ms ease-out both;
+  --animate-slide-down: slide-down 200ms ease-out both;
+
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 }
 
 :root {
-  --surface: #fafaf9;
+  --surface: #fffaf0;
   --surface-raised: #ffffff;
-  --text: #1c1917;
-  --text-muted: #78716c;
-  --border-subtle: #e7e5e4;
-  --accent: #0d9488;
+  --surface-soft: #faf5e8;
+  --text: #0a0a0a;
+  --text-muted: #6a6a6a;
+  --border-subtle: #e5e5e5;
+  --accent: #0a0a0a;
   --accent-fg: #ffffff;
-  --success: #059669;
-  --danger: #dc2626;
-  --ring: #0d9488;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --ring: #0a0a0a;
+
+  --cat-skills: #b8a4ed;
+  --cat-plans: #ffb084;
+  --cat-commands: #ff4d8b;
+  --cat-claudemd: #e8b94a;
+  --cat-settings: #1a3a3a;
+  --cat-agents: #4a9eff;
+  --cat-plugins: #50c878;
 }
 
 .dark {
-  --surface: #1c1917;
-  --surface-raised: #292524;
-  --text: #fafaf9;
-  --text-muted: #a8a29e;
-  --border-subtle: #44403c;
-  --accent: #2dd4bf;
-  --accent-fg: #134e4a;
-  --success: #34d399;
-  --danger: #f87171;
-  --ring: #2dd4bf;
+  --surface: #0a1a1a;
+  --surface-raised: #1a2a2a;
+  --surface-soft: #12201f;
+  --text: #f5f5f0;
+  --text-muted: #a0a0a0;
+  --border-subtle: #2a3a3a;
+  --accent: #fffaf0;
+  --accent-fg: #0a1a1a;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --ring: #fffaf0;
+
+  --cat-skills: #b8a4ed;
+  --cat-plans: #ffb084;
+  --cat-commands: #ff4d8b;
+  --cat-claudemd: #e8b94a;
+  --cat-settings: #4a7a7a;
+  --cat-agents: #4a9eff;
+  --cat-plugins: #50c878;
 
   --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
   --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.35), 0 2px 4px -2px rgb(0 0 0 / 0.25);
   --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.4), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 @layer base {
@@ -97,5 +148,24 @@
       transition-duration: 0.01ms !important;
       scroll-behavior: auto !important;
     }
+  }
+
+  .settings-search::-webkit-search-cancel-button {
+    -webkit-appearance: none;
+    appearance: none;
+    display: none;
+  }
+
+  /* Inline environment-variable token inside prose/descriptions */
+  .env-token {
+    font-family: var(--font-mono);
+    font-size: 0.8125em;
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    padding: 0.05em 0.35em;
+    border-radius: var(--radius-sm);
+    background-color: color-mix(in oklab, var(--accent) 12%, transparent);
+    color: color-mix(in oklab, var(--accent) 72%, var(--text));
+    white-space: nowrap;
   }
 }

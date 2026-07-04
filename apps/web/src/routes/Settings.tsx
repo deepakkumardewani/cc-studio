@@ -61,14 +61,14 @@ export function Settings() {
   }
 
   return (
-    <section className="space-y-6">
-      <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">Settings</p>
-        <h2 className="text-2xl font-semibold tracking-tight text-text">
-          Claude Code settings.json
+    <section className="animate-fade-in -my-8 flex h-[calc(100dvh-4.8125rem)] min-h-0 flex-col gap-4 overflow-hidden py-6">
+      <div className="flex shrink-0 flex-wrap items-baseline gap-x-3 gap-y-1 pb-2">
+        <h2 className="font-display text-2xl font-semibold tracking-tight text-text">
+          Configuration
         </h2>
-        <p className="mt-2 text-sm text-text-muted">
-          Edit supported settings with schema validation. Only settings.json is writable.
+        <p className="font-mono text-sm text-text-muted">
+          settings.json
+          <span className="ml-2 font-sans">· {fields.length} options</span>
         </p>
       </div>
 
@@ -78,6 +78,10 @@ export function Settings() {
         onSubmit={handleSubmit}
         submitError={submitError}
         submitSuccess={submitSuccess}
+        onDismissNotification={() => {
+          setSubmitError(null);
+          setSubmitSuccess(null);
+        }}
       />
     </section>
   );

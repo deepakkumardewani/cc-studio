@@ -6,6 +6,7 @@ import { File } from "./routes/File";
 import { Layout } from "./routes/Layout";
 import { List } from "./routes/List";
 import { Settings } from "./routes/Settings";
+import { Workspace } from "./routes/Workspace";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -15,6 +16,7 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <List /> },
       { path: "settings", element: <Settings /> },
+      { path: "workspace", element: <Workspace /> },
       { path: ":segment/*", element: <File /> },
       { path: ":segment", element: <File /> },
     ],
