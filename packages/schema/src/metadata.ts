@@ -14,6 +14,7 @@ export const SETTINGS_GROUP_ORDER = [
   "MCP Servers",
   "Auth & Env",
   "Advanced",
+  "Overrides",
 ] as const;
 
 export type SettingsGroup = (typeof SETTINGS_GROUP_ORDER)[number];
@@ -25,6 +26,7 @@ export type FieldMetadata = {
   control: ControlType;
   group: SettingsGroup;
   options?: SelectOption[];
+  placeholder?: string;
 };
 
 const FIELD_GROUP_BY_KEY: Record<string, SettingsGroup> = {
@@ -60,7 +62,6 @@ const FIELD_GROUP_BY_KEY: Record<string, SettingsGroup> = {
   showClearContextOnPlanAccept: "General",
   showThinkingSummaries: "General",
   showTurnDuration: "General",
-  skillOverrides: "General",
   skipWebFetchPreflight: "General",
   spinnerTipsEnabled: "General",
   spinnerTipsOverride: "General",
@@ -111,6 +112,57 @@ const FIELD_GROUP_BY_KEY: Record<string, SettingsGroup> = {
   forceRemoteSettingsRefresh: "Advanced",
   parentSettingsBehavior: "Advanced",
   wslInheritsWindowsSettings: "Advanced",
+  skillOverrides: "Overrides",
+};
+
+/**
+ * Example values shown as placeholders, drawn from the Claude Code docs. Env, enabledPlugins,
+ * and extraKnownMarketplaces use dedicated structured editors, so they are intentionally omitted.
+ */
+const FIELD_PLACEHOLDER_BY_KEY: Record<string, string> = {
+  apiKeyHelper: "/usr/local/bin/get-anthropic-key.sh",
+  awsCredentialExport: "/usr/local/bin/export-aws-creds.sh",
+  awsAuthRefresh: "aws sso login --profile my-profile",
+  cleanupPeriodDays: "30",
+  plansDirectory: "~/.claude/plans",
+  language: "spanish",
+  model: "claude-opus-4-6",
+  feedbackSurveyRate: "0.05",
+  forceLoginOrgUUID: "123e4567-e89b-12d3-a456-426614174000",
+  otelHeadersHelper: "/usr/local/bin/get-otel-headers.sh",
+  outputStyle: "Explanatory",
+  prUrlTemplate: "https://git.example.com/{owner}/{repo}/pull/{number}",
+  pluginTrustMessage: "Only install plugins approved by the platform team.",
+  minimumVersion: "2.1.0",
+  agent: "code-reviewer",
+  autoMemoryDirectory: "~/.claude/memory",
+  claudeMdExcludes: '[\n  "**/vendor/**/CLAUDE.md"\n]',
+  attribution: '{\n  "commit": "🤖 Generated with Claude Code",\n  "pr": ""\n}',
+  permissions:
+    '{\n  "allow": ["Bash(git status)"],\n  "deny": ["Read(./.env)"],\n  "defaultMode": "default"\n}',
+  availableModels: '[\n  "claude-opus-4-6",\n  "claude-sonnet-4-6"\n]',
+  modelOverrides: '{\n  "claude-opus-4-6": "arn:aws:bedrock:us-east-1::inference-profile/…"\n}',
+  enabledMcpjsonServers: '[\n  "memory",\n  "github"\n]',
+  disabledMcpjsonServers: '[\n  "filesystem"\n]',
+  allowedMcpServers: '[\n  "github"\n]',
+  deniedMcpServers: '[\n  "untrusted-server"\n]',
+  httpHookAllowedEnvVars: '[\n  "GITHUB_TOKEN"\n]',
+  hooks:
+    '{\n  "PreToolUse": [\n    {\n      "matcher": "Bash",\n      "hooks": [{ "type": "command", "command": "./scripts/audit.sh" }]\n    }\n  ]\n}',
+  allowedChannelPlugins: '[\n  "notifier@team-tools"\n]',
+  allowedHttpHookUrls: '[\n  "https://hooks.example.com/*"\n]',
+  statusLine: '{\n  "type": "command",\n  "command": "~/.claude/statusline.sh"\n}',
+  subagentStatusLine: '{\n  "type": "command",\n  "command": "~/.claude/subagent-statusline.sh"\n}',
+  fileSuggestion: '{\n  "type": "command",\n  "command": "./scripts/file-index.sh"\n}',
+  strictKnownMarketplaces: '[\n  { "source": "github", "repo": "acme/approved-plugins" }\n]',
+  skippedMarketplaces: '[\n  "community-tools"\n]',
+  skippedPlugins: '[\n  "experimental@personal"\n]',
+  blockedMarketplaces: '[\n  { "source": "github", "repo": "untrusted/plugins" }\n]',
+  skillOverrides: '{\n  "humanizer": "off",\n  "commit": "user-invocable-only"\n}',
+  companyAnnouncements: '[\n  "Welcome to the platform!"\n]',
+  strictPluginOnlyCustomization: '[\n  "skills",\n  "hooks"\n]',
+  pluginConfigs: '{\n  "formatter@acme-tools": { "options": {} }\n}',
+  spinnerTipsOverride: '[\n  "Tip: press / to search settings"\n]',
 };
 
 type BaseFieldMetadata = Omit<FieldMetadata, "group">;
@@ -806,7 +858,8 @@ function attachFieldGroups(fields: BaseFieldMetadata[]): FieldMetadata[] {
     if (!group) {
       throw new Error(`Missing settings group for field "${field.key}"`);
     }
-    return { ...field, group };
+    const placeholder = FIELD_PLACEHOLDER_BY_KEY[field.key];
+    return placeholder ? { ...field, group, placeholder } : { ...field, group };
   });
 }
 
