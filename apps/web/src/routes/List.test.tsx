@@ -9,5 +9,5 @@ test("List renders loading state", () => {
       <List />
     </MemoryRouter>,
   );
-  expect(html).toContain("Loading overview");
+  expect(html).toContain("Loading your workspace");
 });
