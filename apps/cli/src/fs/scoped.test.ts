@@ -1,8 +1,15 @@
-import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, test } from "vite-plus/test";
-import { CATEGORY_IDS, listAllCategories, listCategory, readFileText, safePath } from "./scoped.js";
+import {
+  CATEGORY_IDS,
+  listAllCategories,
+  listCategory,
+  readFileText,
+  safePath,
+  writeFileText,
+} from "./scoped.js";
 
 let fixtureRoot = "";
 let previousRoot: string | undefined;
@@ -15,9 +22,12 @@ beforeEach(async () => {
   await mkdir(join(fixtureRoot, "skills", "demo"), { recursive: true });
   await mkdir(join(fixtureRoot, "plans"), { recursive: true });
   await mkdir(join(fixtureRoot, "commands"), { recursive: true });
+  await mkdir(join(fixtureRoot, "agents"), { recursive: true });
+  await mkdir(join(fixtureRoot, "plugins"), { recursive: true });
   await writeFile(join(fixtureRoot, "skills", "demo", "SKILL.md"), "# Demo Skill");
   await writeFile(join(fixtureRoot, "plans", "plan-a.md"), "# Plan A");
   await writeFile(join(fixtureRoot, "commands", "build.md"), "# Build");
+  await writeFile(join(fixtureRoot, "agents", "my-agent.md"), "# My Agent");
   await writeFile(join(fixtureRoot, "CLAUDE.md"), "# Root Claude");
   await writeFile(join(fixtureRoot, "settings.json"), '{"theme":"dark"}');
   await mkdir(join(fixtureRoot, "cache"), { recursive: true });
@@ -30,7 +40,7 @@ afterEach(async () => {
 });
 
 describe("safePath", () => {
-  test("resolves all five categories within fixture root", () => {
+  test("resolves all seven categories within fixture root", () => {
     for (const category of CATEGORY_IDS) {
       const resolved = safePath(category);
       expect(resolved.startsWith(fixtureRoot)).toBe(true);
@@ -69,6 +79,16 @@ describe("listCategory", () => {
     expect(await listCategory("skills")).toEqual(["demo/SKILL.md"]);
     expect(await listCategory("plans")).toEqual(["plan-a.md"]);
     expect(await listCategory("commands")).toEqual(["build.md"]);
+    expect(await listCategory("agents")).toEqual(["my-agent.md"]);
+  });
+
+  test("lists all files for plugins category", async () => {
+    await mkdir(join(fixtureRoot, "plugins", "my-plugin"), { recursive: true });
+    await writeFile(join(fixtureRoot, "plugins", "my-plugin", "SKILL.md"), "# Plugin Skill");
+    await writeFile(join(fixtureRoot, "plugins", "my-plugin", "config.json"), "{}");
+    const files = await listCategory("plugins");
+    expect(files).toContain("my-plugin/SKILL.md");
+    expect(files).toContain("my-plugin/config.json");
   });
 
   test("lists single entries for file categories when present", async () => {
@@ -93,5 +113,29 @@ describe("readFileText", () => {
   test("reads claudeMd and settings files", async () => {
     expect(await readFileText("claudeMd", "")).toBe("# Root Claude");
     expect(await readFileText("settings", "")).toContain("theme");
+  });
+
+  test("reads agent .md files", async () => {
+    expect(await readFileText("agents", "my-agent.md")).toBe("# My Agent");
+  });
+});
+
+describe("writeFileText", () => {
+  test("writes a new agent .md file", async () => {
+    await writeFileText("agents", "new-agent.md", "# New Agent");
+    const content = await readFile(join(fixtureRoot, "agents", "new-agent.md"), "utf8");
+    expect(content).toBe("# New Agent");
+  });
+
+  test("overwrites an existing file", async () => {
+    await writeFileText("agents", "my-agent.md", "# Updated Agent");
+    const content = await readFile(join(fixtureRoot, "agents", "my-agent.md"), "utf8");
+    expect(content).toBe("# Updated Agent");
+  });
+
+  test("rejects traversal attempts", async () => {
+    await expect(writeFileText("agents", "../evil.md", "bad")).rejects.toThrow(
+      /path escapes (category root|claude root)/,
+    );
   });
 });

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vp exec tsx watch src/main.ts",
+    "dev": "vp exec tsx watch src/main.ts --port 3002",
     "build": "tsc -b && vp build",
     "test": "vp test",
     "check": "vp check"
