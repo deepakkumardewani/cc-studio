@@ -3,11 +3,11 @@ import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, test, vi } from "vite-plus/test";
-import * as api from "../lib/api";
+import * as api from "../api/context";
 import { Workspace } from "./Workspace";
 
-vi.mock("../lib/api", () => ({
-  fetchContext: vi.fn(),
+vi.mock("../api/context", () => ({
+  fetchContextDetails: vi.fn(),
 }));
 
 afterEach(() => {
@@ -23,25 +23,32 @@ function renderWorkspace() {
 }
 
 test("renders loading skeleton initially", () => {
-  vi.mocked(api.fetchContext).mockReturnValue(new Promise(() => {}));
+  vi.mocked(api.fetchContextDetails).mockReturnValue(new Promise(() => {}));
   const html = renderWorkspace();
   expect(html).toContain("animate-pulse");
   expect(html).toContain("Loading context breakdown");
 });
 
 test("renders without errors when mounted", () => {
-  vi.mocked(api.fetchContext).mockReturnValue(new Promise(() => {}));
+  vi.mocked(api.fetchContextDetails).mockReturnValue(new Promise(() => {}));
   expect(() => renderWorkspace()).not.toThrow();
 });
 
 test("renders breakdown when context API succeeds", async () => {
-  vi.mocked(api.fetchContext).mockResolvedValue({
+  vi.mocked(api.fetchContextDetails).mockResolvedValue({
     success: true,
-    breakdown: [
-      { category: "System Prompt", tokens: 5000, percentage: 50 },
-      { category: "Tools", tokens: 5000, percentage: 50 },
-    ],
-    total: 10000,
+    data: {
+      model: "Sonnet 4.6",
+      model_id: "claude-sonnet-4-6",
+      total_tokens: 10000,
+      max_tokens: 200000,
+      percentage: 5,
+      is_estimated: false,
+      categories: [
+        { name: "System Prompt", tokens: 5000, percentage: 50, items: [] },
+        { name: "Tools", tokens: 5000, percentage: 50, items: [] },
+      ],
+    },
   });
 
   render(
@@ -58,7 +65,10 @@ test("renders breakdown when context API succeeds", async () => {
 });
 
 test("renders error alert when context API fails", async () => {
-  vi.mocked(api.fetchContext).mockRejectedValue(new Error("Network error"));
+  vi.mocked(api.fetchContextDetails).mockResolvedValue({
+    success: false,
+    error: "Network error",
+  });
 
   render(
     <MemoryRouter>
