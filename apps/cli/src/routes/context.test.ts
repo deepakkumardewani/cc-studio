@@ -20,3 +20,23 @@ describe("/api/context", () => {
     }
   }, 10_000);
 });
+
+describe("/api/context/all", () => {
+  test("returns graceful error when claude CLI not in PATH", async () => {
+    const originalPath = process.env.PATH;
+    process.env.PATH = "";
+
+    try {
+      const app = createApp();
+      const response = await app.request("/api/context/all");
+      expect(response.status).toBe(200);
+
+      const body = (await response.json()) as { success: boolean; error?: string };
+      expect(body.success).toBe(false);
+      expect(typeof body.error).toBe("string");
+      expect(body.error!.length).toBeGreaterThan(0);
+    } finally {
+      process.env.PATH = originalPath;
+    }
+  }, 10_000);
+});

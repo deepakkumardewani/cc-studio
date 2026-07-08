@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { getContextResponse } from "./routes/context.js";
+import { getContextResponse, getContextAllResponse } from "./routes/context.js";
 import { getFileResponse, postFileResponse } from "./routes/file.js";
 import {
   getSettingsResponse,
@@ -53,6 +53,13 @@ export function createApp() {
 
   app.get("/api/context", async (c) => {
     const result = await getContextResponse();
+    return c.json(result);
+  });
+
+  // Global context endpoint — returns full context details including model, tokens, percentage
+  // and nested items (skills, agents, MCPs, memory files). Not project-scoped.
+  app.get("/api/context/all", async (c) => {
+    const result = await getContextAllResponse();
     return c.json(result);
   });
 
