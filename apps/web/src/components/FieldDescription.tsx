@@ -1,6 +1,8 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { HighlightText } from "./HighlightText";
 
+// Descriptions longer than this collapse to two lines until expanded.
+const COLLAPSE_THRESHOLD = 220;
 const URL_PATTERN = /https?:\/\/[^\s,)]+/g;
 // Env-var-like tokens: ALL-CAPS with at least one underscore (e.g. CLAUDE_CODE_DISABLE_AUTO_MEMORY).
 const ENV_TOKEN_PATTERN = /\b[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+\b/g;
@@ -79,25 +81,41 @@ export function FieldDescription({
   text: string;
   highlightQuery?: string;
 }) {
+  const [expanded, setExpanded] = useState(false);
   const parts = splitLinks(text);
+  // Keep long descriptions out of the way, but never hide an active search match.
+  const collapsible = text.length > COLLAPSE_THRESHOLD && !highlightQuery;
+  const collapsed = collapsible && !expanded;
 
   return (
-    <p className="text-sm leading-relaxed text-text-muted">
-      {parts.map((part, partIndex) =>
-        part.type === "link" ? (
-          <a
-            key={`${part.value}-${partIndex}`}
-            href={part.value}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="break-words text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
-          >
-            {part.value}
-          </a>
-        ) : (
-          renderText(part.value, highlightQuery, `p${partIndex}`)
-        ),
-      )}
-    </p>
+    <div>
+      <p className={`text-sm leading-relaxed text-text-muted ${collapsed ? "line-clamp-2" : ""}`}>
+        {parts.map((part, partIndex) =>
+          part.type === "link" ? (
+            <a
+              key={`${part.value}-${partIndex}`}
+              href={part.value}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="break-words text-accent underline decoration-accent/40 underline-offset-2 transition hover:decoration-accent"
+            >
+              {part.value}
+            </a>
+          ) : (
+            renderText(part.value, highlightQuery, `p${partIndex}`)
+          ),
+        )}
+      </p>
+      {collapsible ? (
+        <button
+          type="button"
+          aria-expanded={expanded}
+          onClick={() => setExpanded(!expanded)}
+          className="mt-1 text-xs font-medium text-text-muted transition hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          {expanded ? "Show less" : "Show more"}
+        </button>
+      ) : null}
+    </div>
   );
 }
