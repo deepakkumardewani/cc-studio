@@ -8,11 +8,11 @@
   ],
   "type": "module",
   "scripts": {
-    "ready": "vp check && vp run -r test && vp run -r build",
+    "ready": "bun run check && vp run -r test && vp run -r build",
     "dev": "vp run schema#build && vp run -r --parallel dev",
     "build": "vp run schema#build && vp run web#build && vp run claude-desk#build",
     "test": "vp test",
-    "check": "vp check",
+    "check": "vp run schema#build && vp check",
     "prepare": "vp config --no-hooks"
   },
   "devDependencies": {
