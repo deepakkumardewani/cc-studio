@@ -44,6 +44,10 @@ export async function postFileResponse(categoryParam: string, nameParam: string,
     return { status: 400 as const, body: { error: "use PUT /api/settings to update settings" } };
   }
 
+  if (categoryParam === "plugins") {
+    return { status: 403 as const, body: { error: "plugins are read-only" } };
+  }
+
   try {
     const relative = categoryParam === "claudeMd" ? "" : name;
     await writeFileText(categoryParam, relative, content);
