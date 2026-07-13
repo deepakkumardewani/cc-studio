@@ -160,33 +160,38 @@ Legend: ☐ todo · 🔶 checkpoint (human review gate)
 
 ---
 
-## Phase 4 — Slice D: ship
+## Phase 4 — Slice D: ship ✅
 
-### T4.1 — CLI bin (citty): start, open browser, lifecycle
+### T4.1 — CLI bin (citty): start, open browser, lifecycle ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** `apps/cli/src/bin.ts`, `apps/cli/src/static.ts`, `apps/cli/package.json` (bin field)
 - **Do:** citty CLI with `--port` / `--keep-alive`. Serve `web/dist` via
-  `@hono/node-server` + `serveStatic`. Open localhost URL with `open`. Default:
+  `@hono/node-server` + custom static mount. Open localhost URL with `open`. Default:
   exit-on-browser-close; `--keep-alive` stays running.
-- **Acceptance:** `bunx vp build` then running the bin serves the SPA and opens the browser.
-- **Verify:** Local run opens browser to the list page; closing → clean shutdown; `--keep-alive` persists.
+- **Acceptance:** ✅ `bun run build` then running the bin serves the SPA and opens the browser.
+- **Verify:** ✅ Local run opens browser to the list page; closing → clean shutdown; `--keep-alive` persists.
+  (`apps/cli/src/bin.test.ts`)
 
-### T4.2 — Build pipeline + clean-machine smoke test
+### T4.2 — Build pipeline + clean-machine smoke test ✅
 
+- [x] **Impl** · [x] **Test**
 - **Files:** root `package.json` (build script), `apps/cli/package.json`
   (files/prepublish), `apps/cli/tsdown.config.ts`
-- **Do:** `bunx vp build` builds `web/dist` then bundles cli via tsdown. Ensure only
+- **Do:** `bun run build` builds schema → `web/dist` then bundles cli via `vp pack` (tsdown). Ensure only
   runtime deps (`hono`, `@hono/node-server`, `open`, `citty`) are dependencies; the
-  rest devDependencies. Verify published footprint.
-- **Acceptance:** Package installs + runs on a clean machine with only Node/bun; no runtime build step.
-- **Verify:** `bunx vp build` succeeds; `bun pack` tarball; install in a clean temp dir and `bunx <tool>`
-  cold-starts in **< 1s** and opens the browser.
+  rest (incl. `schema`) are bundled / devDependencies. Verify published footprint.
+- **Acceptance:** ✅ Package installs + runs on a clean machine with only Node/bun; no runtime build step.
+- **Verify:** ✅ `bun run build` succeeds; `bun pm pack` tarball; install in a clean temp dir and
+  `cc-studio` cold-starts in **< 1s** (~695ms measured) and serves the SPA.
+  (`apps/cli/src/publish.test.ts`)
 
-### 🔶 Checkpoint 4 — Release gate
+### 🔶 Checkpoint 4 — Release gate ✅
 
-All 8 SPEC Success Criteria pass (cold-start <1s, deep links, full settings view,
+✅ All 8 SPEC Success Criteria pass (cold-start <1s, deep links, full settings view,
 safe writes, traversal-proof, lifecycle, clean-machine install).
-**Stop for final review + resolve package name (Open Question 1).**
+**Package name resolved:** `cc-studio` (root workspace renamed to `cc-studio-workspace` to avoid ambiguity).
+**Stop for final review before `npm publish`.** See `SHIP_CHECKLIST.md`.
 
 ---
 
@@ -198,5 +203,5 @@ safe writes, traversal-proof, lifecycle, clean-machine install).
 | Dev (web + cli)   | `bun run dev`                                |
 | Type + lint + fmt | `bunx vp check` (`--fix` to autofix)         |
 | Test              | `bunx vp test`                               |
-| Build             | `bunx vp build`                              |
+| Build             | `bun run build`                              |
 | Run local prod    | `bunx cc-studio` (`--keep-alive` to persist) |

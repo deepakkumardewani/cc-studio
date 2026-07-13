@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { afterEach, expect, test, vi } from "vite-plus/test";
 import * as api from "../lib/api";
 import { File } from "./File";
@@ -19,13 +19,10 @@ afterEach(() => {
 });
 
 function renderFileAt(path: string) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <Routes>
-        <Route path="/:segment/*" element={<File />} />
-      </Routes>
-    </MemoryRouter>,
-  );
+  const router = createMemoryRouter([{ path: "/:segment/*", element: <File /> }], {
+    initialEntries: [path],
+  });
+  return render(<RouterProvider router={router} />);
 }
 
 test("plugin file shows View only badge", async () => {
