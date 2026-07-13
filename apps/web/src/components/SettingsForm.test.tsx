@@ -62,7 +62,7 @@ test("enum field renders as custom dropdown", () => {
   expect(trigger.textContent).toContain("high");
 });
 
-test("save button is disabled until a setting changes", () => {
+test("save bar appears only once a setting changes", () => {
   render(
     <SettingsForm
       fields={sampleFields}
@@ -71,9 +71,27 @@ test("save button is disabled until a setting changes", () => {
     />,
   );
 
-  expect(screen.getByRole("button", { name: "Save settings" })).toHaveProperty("disabled", true);
+  expect(screen.queryByRole("button", { name: "Save settings" })).toBeNull();
   fireEvent.click(screen.getByRole("switch", { name: "Always Thinking Enabled" }));
+  expect(screen.getByText(/unsaved change/)).toBeTruthy();
   expect(screen.getByRole("button", { name: "Save settings" })).toHaveProperty("disabled", false);
+});
+
+test("discard reverts changes and hides the save bar", () => {
+  render(
+    <SettingsForm
+      fields={sampleFields}
+      defaultValues={{ alwaysThinkingEnabled: false, effortLevel: "high" }}
+      onSubmit={vi.fn()}
+    />,
+  );
+
+  fireEvent.click(screen.getByRole("switch", { name: "Always Thinking Enabled" }));
+  fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+
+  expect(screen.queryByRole("button", { name: "Save settings" })).toBeNull();
+  const toggle = screen.getByRole("switch", { name: "Always Thinking Enabled" });
+  expect((toggle as HTMLInputElement).checked).toBe(false);
 });
 
 test("invalid enum value surfaces inline error and blocks submit", async () => {

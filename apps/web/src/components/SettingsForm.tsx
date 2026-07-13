@@ -229,8 +229,9 @@ export function SettingsForm({
     resolver: zodResolver(claudeSettingsSchema),
     defaultValues,
   });
-  const { errors, isSubmitting, isSubmitted, isDirty } = useFormState({ control });
+  const { errors, isSubmitting, isSubmitted, isDirty, dirtyFields } = useFormState({ control });
   const validationErrorCount = countErrors(errors);
+  const dirtyCount = Object.keys(dirtyFields).length;
   const resultCount = filteredSections.reduce((total, section) => total + section.fields.length, 0);
   const isSearching = query.trim().length > 0;
   const canSave = isDirty && !isSubmitting;
@@ -448,38 +449,6 @@ export function SettingsForm({
               );
             })}
           </ul>
-
-          <div className="mt-4 shrink-0 space-y-3 border-t border-border-subtle bg-surface pt-4 lg:mt-6">
-            {isSubmitted && validationErrorCount > 0 ? (
-              <p className="text-sm text-danger" role="alert">
-                Fix {validationErrorCount} validation error{validationErrorCount === 1 ? "" : "s"}{" "}
-                before saving.
-              </p>
-            ) : null}
-
-            {submitError ? (
-              <FormNotification
-                type="error"
-                message={submitError}
-                onDismiss={() => onDismissNotification?.()}
-              />
-            ) : null}
-            {submitSuccess ? (
-              <FormNotification
-                type="success"
-                message={submitSuccess}
-                onDismiss={() => onDismissNotification?.()}
-              />
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={!canSave}
-              className="w-full rounded-lg bg-accent px-4 py-2.5 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              {isSubmitting ? "Saving…" : "Save settings"}
-            </button>
-          </div>
         </nav>
 
         <div
@@ -556,6 +525,56 @@ export function SettingsForm({
           ) : null}
         </div>
       </div>
+
+      {isDirty || isSubmitting || submitError || submitSuccess ? (
+        <div className="shrink-0 pt-3">
+          <div className="flex flex-wrap items-center gap-3 rounded-xl border border-border-subtle bg-surface-raised px-4 py-3 shadow-md">
+            <div className="min-w-0 flex-1">
+              {submitError ? (
+                <FormNotification
+                  type="error"
+                  message={submitError}
+                  onDismiss={() => onDismissNotification?.()}
+                />
+              ) : submitSuccess ? (
+                <FormNotification
+                  type="success"
+                  message={submitSuccess}
+                  onDismiss={() => onDismissNotification?.()}
+                />
+              ) : isSubmitted && validationErrorCount > 0 ? (
+                <p className="text-sm text-danger" role="alert">
+                  Fix {validationErrorCount} validation error
+                  {validationErrorCount === 1 ? "" : "s"} before saving.
+                </p>
+              ) : (
+                <p className="text-sm text-text-muted">
+                  <span className="font-medium text-text">{dirtyCount}</span> unsaved change
+                  {dirtyCount === 1 ? "" : "s"}
+                </p>
+              )}
+            </div>
+
+            {isDirty ? (
+              <button
+                type="button"
+                onClick={() => reset()}
+                disabled={isSubmitting}
+                className="shrink-0 rounded-lg px-3 py-2 text-sm font-medium text-text-muted transition hover:bg-surface-soft hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+              >
+                Discard
+              </button>
+            ) : null}
+            <button
+              type="submit"
+              disabled={!canSave}
+              className="shrink-0 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              {isSubmitting ? "Saving…" : "Save settings"}
+            </button>
+          </div>
+        </div>
+      ) : null}
     </form>
   );
 }
