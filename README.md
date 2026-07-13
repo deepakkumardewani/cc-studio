@@ -1,29 +1,161 @@
-# Vite+ Monorepo Starter
+<div align="center">
 
-A starter for creating a Vite+ monorepo.
+<img src="./assets/logo.png" width="96" alt="Claude Desk logo" />
+
+# Claude Desk
+
+Browse and edit your [Claude Code](https://docs.claude.com/en/docs/claude-code) config (`~/.claude`) in the browser — skills, plans, commands, agents, plugins, `CLAUDE.md`, and settings — without hand-editing JSON in the terminal.
+
+![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
+![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
+![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
+![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
+
+![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
+![Hono](https://img.shields.io/badge/hono-E36002?style=for-the-badge&logo=hono&logoColor=white)
+![Vitest](https://img.shields.io/badge/-Vitest-252529?style=for-the-badge&logo=vitest&logoColor=FCC72B)
+
+![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)
+![Claude](https://img.shields.io/badge/Claude-CC785C?style=for-the-badge&logo=claude&logoColor=white)
+[![GitHub license](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
+
+```bash
+npx claude-desk
+```
+
+One command starts a localhost server and opens the UI. Close the tab to shut down (or pass `--keep-alive`).
+
+[Features](#features) · [Screenshots](#screenshots) · [Quick start](#quick-start) · [Usage](#usage) · [Development](#development) · [Release](#release) · [How it works](#how-it-works) · [Privacy](#privacy--security)
+
+</div>
+
+---
+
+## Features
+
+- **Workspace browser** — navigate skills, plans, commands, agents, plugins, `CLAUDE.md`, and settings from a single local UI
+- **Readable markdown** — GFM rendering with syntax-highlighted code blocks (Shiki) for skills, plans, commands, and agents
+- **Inline editing** — edit markdown files and save back to disk; unsaved-change protection when leaving a dirty page
+- **Schema-driven settings** — edit `settings.json` through a typed form (dropdowns, toggles, env vars, plugins, marketplaces) instead of raw JSON
+- **Context inspector** — see how context / usage stacks up across your workspace
+- **Search** — filter your workspace quickly from the home view
+- **Deep links** — open a specific skill or file via URL (`/skills/:name`, and the other category routes)
+- **Theme toggle** — light / dark UI
+- **Safe by default** — API only reaches a fixed set of paths under `~/.claude` (no arbitrary filesystem access); settings writes are validated before save
+
+## Screenshots
+
+**Home** — search your config, jump into categories, and glance at current settings.
+
+![Home](./docs/images/home.png)
+
+**Settings** — schema-driven form for `settings.json` with searchable sections.
+
+![Settings](./docs/images/settings.png)
+
+**Workspace** — context inspector with per-category token breakdown.
+
+![Workspace](./docs/images/workspace.png)
+
+**Skills** — file-tree sidebar for browsing and opening markdown config files.
+
+![Skills](./docs/images/skills.png)
+
+## Quick start
+
+**Requirements:** Node.js `>= 22.12` (or [Bun](https://bun.sh)). The Claude Code CLI is optional for browsing config.
+
+```bash
+npx claude-desk
+# or
+bunx claude-desk
+```
+
+The app binds to localhost, opens your browser, and serves the prebuilt UI. No account, no cloud, no telemetry.
+
+> [!TIP]
+> Use `--keep-alive` if you want the server to stay up after closing the browser tab (handy while iterating on skills or settings).
+
+## Usage
+
+```
+claude-desk [options]
+
+Options:
+  -p, --port <n>    Listen port (default: 3847)
+  --keep-alive      Keep the server running after the browser tab closes
+```
+
+Examples:
+
+```bash
+npx claude-desk --port 4000
+npx claude-desk --keep-alive
+```
+
+### What you can open
+
+| Area     | Path under `~/.claude`                   |
+| -------- | ---------------------------------------- |
+| Skills   | `skills/`                                |
+| Plans    | `plans/`                                 |
+| Commands | `commands/`                              |
+| Agents   | `agents/`                                |
+| Plugins  | `plugins/` (and related settings fields) |
+| Memory   | `CLAUDE.md`                              |
+| Settings | `settings.json`                          |
 
 ## Development
 
-- Check everything is ready:
+This repo is a Bun workspace monorepo:
+
+| Package                    | Role                       |
+| -------------------------- | -------------------------- |
+| `apps/web`                 | React SPA (Vite+)          |
+| `apps/cli` (`claude-desk`) | Hono API + published `bin` |
+| `packages/schema`          | Shared Zod settings schema |
 
 ```bash
-vp run ready
+bun install
+bun run dev          # web + API together
+bun run build        # schema → web → CLI pack (+ SPA into apps/cli/web)
+bunx vp test
+bunx vp check
 ```
 
-- Run the tests:
+Local production CLI after a build:
 
 ```bash
-vp run -r test
+bunx claude-desk --keep-alive
 ```
 
-- Build the monorepo:
+## Release
 
-```bash
-vp run -r build
+Use the project slash command (Claude Code):
+
+```text
+/release
 ```
 
-- Run the development server:
+Defined in `.claude/commands/release.md`. It syncs the root `LICENSE` into `apps/cli`, runs check → test → build → pack dry-run, then **`npm publish`**.
 
-```bash
-vp run dev
+## How it works
+
 ```
+┌────────────┐        localhost         ┌──────────────────────────┐
+│  Browser   │ ◀──────────────────────▶ │  claude-desk (Hono) │
+│  React SPA │                          │  127.0.0.1:<port>        │
+└────────────┘                          └────────────┬─────────────┘
+                                                     │ scoped read/write
+                                          ~/.claude  (skills, plans, …)
+```
+
+`npx claude-desk` starts the server, opens the URL, and serves the prebuilt SPA from the package. The UI talks only to that local server; the server only touches Claude Code config paths under `~/.claude`.
+
+## Privacy & security
+
+- **Local only** — binds to localhost; nothing is exposed to your LAN or the internet by default
+- **No telemetry / no accounts** — the tool does not phone home
+- **Scoped file access** — only the curated Claude config categories are readable/writable through the API
+- **Validated settings writes** — `settings.json` updates go through the shared Zod schema before disk write
