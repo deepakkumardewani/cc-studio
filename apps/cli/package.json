@@ -24,7 +24,7 @@
     "url": "git+https://github.com/deepakkumardewani/cc-studio.git"
   },
   "bin": {
-    "claude-desk": "./dist/bin.mjs"
+    "claude-desk": "dist/bin.mjs"
   },
   "files": [
     "dist",
