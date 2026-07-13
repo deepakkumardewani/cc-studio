@@ -5,7 +5,7 @@ import { getCategoryMeta } from "../lib/categories";
 import { buildTree, type TreeNode } from "../lib/tree";
 import { isDirectCategory } from "../lib/workspace";
 
-const OPEN_FOLDERS_KEY = "cc-studio-tree-open";
+const OPEN_FOLDERS_KEY = "claude-desk-tree-open";
 
 function loadOpenFolders(): Set<string> {
   try {

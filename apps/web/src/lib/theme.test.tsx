@@ -54,5 +54,5 @@ test("ThemeToggle persists theme in localStorage", () => {
 
   fireEvent.click(screen.getByRole("button", { name: /switch to dark mode/i }));
 
-  expect(localStorage.getItem("cc-studio-theme")).toBe("dark");
+  expect(localStorage.getItem("claude-desk-theme")).toBe("dark");
 });

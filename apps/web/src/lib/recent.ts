@@ -1,4 +1,4 @@
-const STORAGE_KEY = "cc-studio-recent";
+const STORAGE_KEY = "claude-desk-recent";
 const MAX_ITEMS = 6;
 
 export type RecentItem = {

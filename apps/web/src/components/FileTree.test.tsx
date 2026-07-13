@@ -92,7 +92,7 @@ test("FileTree persists open folders in localStorage", () => {
   expandSkills();
   fireEvent.click(screen.getByRole("button", { name: "Expand colorize" }));
 
-  const stored = JSON.parse(localStorage.getItem("cc-studio-tree-open") ?? "[]") as string[];
+  const stored = JSON.parse(localStorage.getItem("claude-desk-tree-open") ?? "[]") as string[];
   expect(stored).toContain("category:skills");
   expect(stored).toContain("skills:colorize");
 });

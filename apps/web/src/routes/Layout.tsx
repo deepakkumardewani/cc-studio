@@ -55,15 +55,16 @@ export function Layout() {
       <header className="shrink-0">
         <div className="flex items-center justify-between gap-4 px-6 py-3.5">
           <NavLink to="/" end className="group flex items-center gap-3 focus-visible:outline-none">
-            <span
-              aria-hidden="true"
-              className="grid size-9 shrink-0 place-items-center rounded-lg bg-accent font-display text-sm font-bold tracking-tight text-accent-fg shadow-sm transition-transform duration-200 group-hover:-rotate-3"
-            >
-              cc
-            </span>
+            <img
+              src="/logo.png"
+              alt=""
+              width={36}
+              height={36}
+              className="size-9 shrink-0 object-contain transition-transform duration-200 group-hover:-rotate-3"
+            />
             <span className="leading-none">
               <span className="block font-display text-lg font-semibold tracking-tight text-text">
-                cc-studio
+                Claude Desk
               </span>
               <span className="mt-1 block text-[0.65rem] font-medium uppercase tracking-[0.2em] text-text-muted">
                 Claude Code config

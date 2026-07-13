@@ -10,7 +10,7 @@ import {
 
 export type Theme = "light" | "dark";
 
-const STORAGE_KEY = "cc-studio-theme";
+const STORAGE_KEY = "claude-desk-theme";
 
 type ThemeContextValue = {
   theme: Theme;

@@ -59,7 +59,7 @@ export function friendlyContextError(raw: string | null | undefined): {
   ) {
     return {
       title: "Couldn't reach the server",
-      body: "The app couldn't talk to the local backend. Make sure cc-studio is still running, then try again.",
+      body: "The app couldn't talk to the local backend. Make sure claude-desk is still running, then try again.",
     };
   }
 
@@ -72,7 +72,7 @@ export function friendlyContextError(raw: string | null | undefined): {
 
   return {
     title: "Couldn't load your context",
-    body: "Something went wrong while reading how full Claude's memory is. Try again in a moment. If it keeps failing, restart Claude Code and cc-studio.",
+    body: "Something went wrong while reading how full Claude's memory is. Try again in a moment. If it keeps failing, restart Claude Code and claude-desk.",
   };
 }
 
