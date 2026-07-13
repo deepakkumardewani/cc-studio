@@ -4,6 +4,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, expect, test, vi } from "vite-plus/test";
 import * as api from "../api/context";
+import { clearCachedContext } from "../lib/contextCache";
 import { Workspace } from "./Workspace";
 
 vi.mock("../api/context", () => ({
@@ -12,6 +13,7 @@ vi.mock("../api/context", () => ({
 
 afterEach(() => {
   cleanup();
+  clearCachedContext();
 });
 
 function renderWorkspace() {
@@ -79,5 +81,6 @@ test("renders error alert when context API fails", async () => {
   await waitFor(() => {
     expect(screen.getByRole("alert")).toBeTruthy();
   });
-  expect(screen.getByText("Unable to fetch context.")).toBeTruthy();
+  expect(screen.getByText("Couldn't reach the server")).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Try again" })).toBeTruthy();
 });
