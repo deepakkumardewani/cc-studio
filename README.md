@@ -8,16 +8,11 @@ Browse and edit your [Claude Code](https://docs.claude.com/en/docs/claude-code) 
 
 ![TypeScript](https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white)
 ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB)
-![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white)
-![TailwindCSS](https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white)
-
-![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
-![Bun](https://img.shields.io/badge/Bun-%23000000.svg?style=for-the-badge&logo=bun&logoColor=white)
 ![Hono](https://img.shields.io/badge/hono-E36002?style=for-the-badge&logo=hono&logoColor=white)
 ![Vitest](https://img.shields.io/badge/-Vitest-252529?style=for-the-badge&logo=vitest&logoColor=FCC72B)
 
 ![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white)
-![Claude](https://img.shields.io/badge/Claude-CC785C?style=for-the-badge&logo=claude&logoColor=white)
+[![CI](https://img.shields.io/github/actions/workflow/status/deepakkumardewani/cc-studio/ci.yml?branch=main&style=for-the-badge&label=build)](https://github.com/deepakkumardewani/cc-studio/actions/workflows/ci.yml)
 [![GitHub license](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](./LICENSE)
 
 ```bash
@@ -26,11 +21,17 @@ npx claude-desk
 
 One command starts a localhost server and opens the UI. Close the tab to shut down (or pass `--keep-alive`).
 
-[Features](#features) · [Screenshots](#screenshots) · [Quick start](#quick-start) · [Usage](#usage) · [Development](#development) · [Release](#release) · [How it works](#how-it-works) · [Privacy](#privacy--security)
+[Why](#why) · [Features](#features) · [What's inside](#whats-inside) · [Quick start](#quick-start) · [Usage](#usage) · [Development](#development) · [Contributing](#contributing) · [How it works](#how-it-works) · [Privacy](#privacy--security)
 
 </div>
 
 ---
+
+## Why
+
+Claude Code config lives as files under `~/.claude` — skills, plans, commands, agents, plugins, `CLAUDE.md`, and `settings.json`. Editing that stack in the terminal means bouncing between folders, raw JSON, and markdown with no single place to see what you have.
+
+Claude Desk gives you a local browser UI for the same config: search it, read it with proper rendering, edit it safely, and inspect how context stacks up — without accounts, cloud sync, or leaving localhost.
 
 ## Features
 
@@ -44,7 +45,7 @@ One command starts a localhost server and opens the UI. Close the tab to shut do
 - **Theme toggle** — light / dark UI
 - **Safe by default** — API only reaches a fixed set of paths under `~/.claude` (no arbitrary filesystem access); settings writes are validated before save
 
-## Screenshots
+## What's inside
 
 **Home** — search your config, jump into categories, and glance at current settings.
 
@@ -130,15 +131,24 @@ Local production CLI after a build:
 bunx claude-desk --keep-alive
 ```
 
-## Release
+## Contributing
 
-Use the project slash command (Claude Code):
+Contributions are welcome. Keep changes focused and verify locally before opening a PR.
 
-```text
-/release
-```
+1. **Fork and clone** the repo, then create a branch for your change.
+2. **Install** with `bun install` (Bun `1.3.6` — see `packageManager` in `package.json`).
+3. **Develop** with `bun run dev` (web + API). Use `bunx claude-desk --keep-alive` after a build to exercise the packaged CLI.
+4. **Before you push**, run the same checks CI runs:
 
-Defined in `.claude/commands/release.md`. It syncs the root `LICENSE` into `apps/cli`, runs check → test → build → pack dry-run, then **`npm publish`**.
+   ```bash
+   bun run check   # format, lint, typecheck
+   bun run build   # schema → web → CLI
+   bun run test    # optional but recommended
+   ```
+
+5. **Open a PR** against `main` with a short description of what changed and why.
+
+Please keep PRs scoped (one concern per PR when practical), follow existing patterns in `apps/web`, `apps/cli`, and `packages/schema`, and avoid committing secrets or local `~/.claude` config.
 
 ## How it works
 
