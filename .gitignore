@@ -26,11 +26,15 @@ dist-ssr
 # AI agent worktrees
 .claude/worktrees/
 
+# Packaged SPA assets (copied from apps/web/dist at build time)
+apps/cli/web/
+
 # Verification artifacts
 .verification/
 .verification-screenshots/
 .screenshots/
 *.tsbuildinfo
+*.tgz
 
 agent_docs/
 node-compile-cache/

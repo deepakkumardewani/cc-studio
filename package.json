@@ -1,5 +1,5 @@
 {
-  "name": "cc-studio",
+  "name": "cc-studio-workspace",
   "version": "0.0.0",
   "private": true,
   "workspaces": [
@@ -10,7 +10,7 @@
   "scripts": {
     "ready": "vp check && vp run -r test && vp run -r build",
     "dev": "vp run schema#build && vp run -r --parallel dev",
-    "build": "vp run web#build",
+    "build": "vp run schema#build && vp run web#build && vp run claude-desk#build",
     "test": "vp test",
     "check": "vp check",
     "prepare": "vp config --no-hooks"

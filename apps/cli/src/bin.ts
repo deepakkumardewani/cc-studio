@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+import { defineCommand, runMain } from "citty";
+import { startStudio } from "./studio.js";
+
+const mainCommand = defineCommand({
+  meta: {
+    name: "claude-desk",
+    version: "0.1.0",
+    description: "Browse and edit Claude Code config in the browser",
+  },
+  args: {
+    port: {
+      type: "string",
+      description: "Port to listen on (default 3847)",
+      default: "3847",
+      alias: "p",
+    },
+    "keep-alive": {
+      type: "boolean",
+      description: "Keep the server running after the browser closes",
+      default: false,
+    },
+  },
+  async run({ args }) {
+    const port = Number(args.port);
+    if (!Number.isFinite(port) || port <= 0) {
+      throw new Error(`Invalid --port: ${args.port}`);
+    }
+
+    const keepAlive = Boolean(args["keep-alive"]);
+    const running = await startStudio({ port, keepAlive });
+
+    console.log(`claude-desk listening on ${running.url}`);
+    if (keepAlive) {
+      console.log("keep-alive: server will stay up until interrupted");
+    } else {
+      console.log("close the browser tab to shut down (or Ctrl+C)");
+    }
+
+    const shutdown = async () => {
+      await running.close();
+      process.exit(0);
+    };
+
+    process.once("SIGINT", () => void shutdown());
+    process.once("SIGTERM", () => void shutdown());
+
+    await running.waitUntilExit();
+    process.exit(0);
+  },
+});
+
+void runMain(mainCommand);

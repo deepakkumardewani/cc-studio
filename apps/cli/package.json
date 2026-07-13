@@ -1,23 +1,62 @@
 {
-  "name": "cli",
-  "version": "0.0.0",
-  "private": true,
+  "name": "claude-desk",
+  "version": "0.1.0",
+  "description": "Browse and edit Claude Code config (~/.claude) in the browser",
+  "keywords": [
+    "claude",
+    "claude-code",
+    "cli",
+    "config",
+    "react",
+    "settings",
+    "skills",
+    "typescript",
+    "workspace"
+  ],
+  "homepage": "https://github.com/deepakkumardewani/cc-studio#readme",
+  "bugs": {
+    "url": "https://github.com/deepakkumardewani/cc-studio/issues"
+  },
+  "license": "MIT",
+  "author": "Deepak Dewani",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/deepakkumardewani/cc-studio.git"
+  },
+  "bin": {
+    "claude-desk": "./dist/bin.mjs"
+  },
+  "files": [
+    "dist",
+    "web",
+    "README.md",
+    "LICENSE"
+  ],
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vp exec tsx watch src/main.ts --port 3002",
-    "build": "tsc -b && vp build",
+    "build": "vp pack src/bin.ts && node ./scripts/copy-web-dist.mjs",
+    "prepublishOnly": "bun run build",
     "test": "vp test",
     "check": "vp check"
   },
   "dependencies": {
     "@hono/node-server": "^1.14.1",
+    "citty": "^0.2.2",
     "hono": "^4.7.10",
-    "schema": "workspace:*"
+    "open": "^11.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.10",
+    "schema": "workspace:*",
     "tsx": "^4.19.3",
     "typescript": "~5.7.3",
     "vite-plus": "0.2.1"
+  },
+  "engines": {
+    "node": ">=22.12.0"
   }
 }
