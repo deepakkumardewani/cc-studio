@@ -7,12 +7,20 @@ import { fetchTree, type TreeCategory } from "../lib/api";
 const navItems = [
   { to: "/", label: "Home" },
   { to: "/settings", label: "Settings" },
+  { to: "/claude-md", label: "CLAUDE.md" },
   { to: "/workspace", label: "Workspace" },
 ];
 
+const FULL_WIDTH_ROUTES = new Set(["/", "/settings", "/claude-md", "/workspace"]);
+
+/** The file-tree explorer only accompanies category browsers; primary pages own their layout. */
+function isFileRoute(pathname: string): boolean {
+  return !FULL_WIDTH_ROUTES.has(pathname);
+}
+
 export function Layout() {
   const { pathname } = useLocation();
-  const isHome = pathname === "/";
+  const showTree = isFileRoute(pathname);
   const [categories, setCategories] = useState<TreeCategory[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,13 +97,15 @@ export function Layout() {
       </header>
 
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        {!isHome && (
+        {showTree && (
           <aside className="w-72 shrink-0 overflow-y-auto overscroll-contain border-r border-border-subtle bg-surface-raised py-4">
             <FileTree categories={categories} loading={loading} error={error} />
           </aside>
         )}
-        <main className="min-w-0 flex-1 overflow-y-auto overscroll-contain px-6 py-8">
-          <Outlet />
+        <main className="relative min-w-0 flex-1 overflow-hidden">
+          <div className="h-full overflow-y-auto overscroll-contain px-6 py-8">
+            <Outlet />
+          </div>
         </main>
       </div>
     </div>

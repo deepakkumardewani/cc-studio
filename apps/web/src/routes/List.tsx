@@ -1,24 +1,27 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { fetchSettings, fetchTree, type ApiCategory, type TreeCategory } from "../lib/api";
+import {
+  categoryToRoute,
+  fetchSettings,
+  fetchTree,
+  type ApiCategory,
+  type TreeCategory,
+} from "../lib/api";
 import { getCategoryMeta } from "../lib/categories";
 import { getRecent, type RecentItem } from "../lib/recent";
 import {
+  categoryItemCount,
   flattenFiles,
+  isDirectCategory,
   searchFiles,
+  splitPathLabel,
   summarizeConfig,
   type ConfigStat,
   type WorkspaceFile,
 } from "../lib/workspace";
 import type { ClaudeSettings } from "schema";
 
-const RESULT_LIMIT = 40;
-const SCOPES: Array<{ id: ApiCategory | null; label: string }> = [
-  { id: null, label: "All" },
-  { id: "skills", label: "Skills" },
-  { id: "commands", label: "Commands" },
-  { id: "plans", label: "Plans" },
-];
+const SEARCH_RESULT_LIMIT = 40;
 
 function SearchIcon() {
   return (
@@ -63,7 +66,7 @@ function FileRow({ file }: { file: WorkspaceFile }) {
     >
       <div className="min-w-0 flex-1">
         <p className="truncate font-medium text-text">{file.label}</p>
-        {file.detail !== file.label ? (
+        {file.detail && file.detail !== file.label ? (
           <p className="truncate font-mono text-xs text-text-muted">{file.detail}</p>
         ) : null}
       </div>
@@ -77,12 +80,96 @@ function FileRow({ file }: { file: WorkspaceFile }) {
 
 function StatRow({ stat }: { stat: ConfigStat }) {
   return (
-    <div className="flex items-baseline justify-between gap-4 px-4 py-3">
+    <div className="flex items-baseline justify-between gap-4 py-2.5">
       <span className="text-sm text-text-muted">{stat.label}</span>
       <span className="min-w-0 truncate text-right font-mono text-sm font-medium text-text">
         {stat.value}
         {stat.hint ? <span className="ml-1 font-sans text-text-muted">{stat.hint}</span> : null}
       </span>
+    </div>
+  );
+}
+
+function categoryHref(category: ApiCategory): string {
+  if (category === "settings") {
+    return "/settings";
+  }
+  if (category === "claudeMd") {
+    return "/claude-md";
+  }
+  return `/${categoryToRoute(category)}`;
+}
+
+function Bone({ className }: { className: string }) {
+  return <div className={`animate-pulse rounded bg-border-subtle ${className}`} />;
+}
+
+function LoadingSkeleton() {
+  return (
+    <div
+      aria-busy="true"
+      aria-label="Loading your workspace"
+      className="mx-auto max-w-5xl space-y-7"
+    >
+      <header className="max-w-2xl space-y-3">
+        <Bone className="h-9 w-72 sm:w-96" />
+        <Bone className="h-4 w-full max-w-md" />
+      </header>
+
+      <Bone className="h-14 w-full rounded-xl" />
+
+      <div className="flex flex-col gap-12">
+        <section className="space-y-4">
+          <div className="space-y-2">
+            <Bone className="h-3 w-20" />
+            <Bone className="h-4 w-64" />
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+            {Array.from({ length: 5 }, (_, index) => (
+              <div
+                key={index}
+                className="flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-3 py-2"
+              >
+                <Bone className="size-2 shrink-0 rounded-full" />
+                <Bone className="h-3.5 flex-1" />
+                <Bone className="h-3 w-6" />
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <div className="grid gap-10 lg:grid-cols-2">
+          <section className="space-y-3">
+            <Bone className="h-3 w-32" />
+            <div className="divide-y divide-border-subtle border-t border-border-subtle">
+              {[0, 1].map((row) => (
+                <div key={row} className="flex items-center gap-3 py-3">
+                  <div className="min-w-0 flex-1 space-y-2">
+                    <Bone className="h-4 w-40" />
+                    <Bone className="h-3 w-56" />
+                  </div>
+                  <Bone className="h-5 w-14 rounded-full" />
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <aside className="space-y-3">
+            <div className="flex items-center justify-between">
+              <Bone className="h-3 w-28" />
+              <Bone className="h-3 w-10" />
+            </div>
+            <div className="divide-y divide-border-subtle border-t border-border-subtle">
+              {[0, 1, 2, 3].map((row) => (
+                <div key={row} className="flex items-center justify-between gap-4 py-3">
+                  <Bone className="h-4 w-20" />
+                  <Bone className="h-4 w-16" />
+                </div>
+              ))}
+            </div>
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }
@@ -152,12 +239,21 @@ export function List() {
   }, []);
 
   const files = useMemo(() => flattenFiles(categories), [categories]);
+  const hasQuery = query.trim().length > 0;
   const results = useMemo(() => searchFiles(files, query, scope), [files, query, scope]);
   const stats = useMemo(() => summarizeConfig(settings), [settings]);
-  const isBrowsing = query.trim().length > 0 || scope !== null;
+  const scopes = useMemo<Array<{ id: ApiCategory | null; label: string }>>(
+    () => [
+      { id: null, label: "All" },
+      ...categories
+        .filter((category) => !isDirectCategory(category.category))
+        .map((category) => ({ id: category.category, label: category.label })),
+    ],
+    [categories],
+  );
 
   if (loading) {
-    return <p className="text-text-muted">Loading your workspace…</p>;
+    return <LoadingSkeleton />;
   }
 
   if (error) {
@@ -165,17 +261,13 @@ export function List() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8">
+    <div className="mx-auto max-w-5xl space-y-7">
       <header className="max-w-2xl">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
-          Workspace
-        </p>
-        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-text">
+        <h1 className="font-display text-3xl font-bold tracking-tight text-text sm:text-4xl">
           Your Claude workspace
         </h1>
-        <p className="mt-3 text-base text-text-muted">
-          {files.length} files across skills, commands, plans, and config. Search to jump anywhere,
-          or pick up where you left off.
+        <p className="mt-2 text-base text-text-muted">
+          Search to jump anywhere, or open a category to browse in the sidebar.
         </p>
       </header>
 
@@ -204,33 +296,33 @@ export function List() {
           </kbd>
         </div>
 
-        <div className="mt-3 flex flex-wrap items-center gap-2">
-          {SCOPES.map((option) => {
-            const isActive = scope === option.id;
-            return (
-              <button
-                key={option.label}
-                type="button"
-                onClick={() => setScope(option.id)}
-                className={`rounded-full px-3 py-1 text-sm transition ${
-                  isActive
-                    ? "bg-accent text-accent-fg"
-                    : "border border-border-subtle text-text-muted hover:border-accent/40 hover:text-text"
-                }`}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-          {isBrowsing ? (
+        {hasQuery ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {scopes.map((option) => {
+              const isActive = scope === option.id;
+              return (
+                <button
+                  key={option.label}
+                  type="button"
+                  onClick={() => setScope(option.id)}
+                  className={`rounded-full px-3 py-1 text-sm transition ${
+                    isActive
+                      ? "bg-accent text-accent-fg"
+                      : "border border-border-subtle text-text-muted hover:border-accent/40 hover:text-text"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              );
+            })}
             <span className="ml-auto text-sm text-text-muted">
-              {results.length} match{results.length === 1 ? "" : "es"}
+              {results.length.toLocaleString()} match{results.length === 1 ? "" : "es"}
             </span>
-          ) : null}
-        </div>
+          </div>
+        ) : null}
       </div>
 
-      {isBrowsing ? (
+      {hasQuery ? (
         <section aria-label="Search results">
           {results.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border-subtle bg-surface-raised p-10 text-center">
@@ -242,111 +334,127 @@ export function List() {
           ) : (
             <div className="overflow-hidden rounded-xl border border-border-subtle bg-surface-raised shadow-sm">
               <div className="divide-y divide-border-subtle">
-                {results.slice(0, RESULT_LIMIT).map((file) => (
+                {results.slice(0, SEARCH_RESULT_LIMIT).map((file) => (
                   <FileRow key={`${file.category}-${file.name}`} file={file} />
                 ))}
               </div>
-              {results.length > RESULT_LIMIT ? (
+              {results.length > SEARCH_RESULT_LIMIT ? (
                 <p className="border-t border-border-subtle px-4 py-2.5 text-xs text-text-muted">
-                  Showing first {RESULT_LIMIT} of {results.length}. Keep typing to narrow it down.
+                  Showing first {SEARCH_RESULT_LIMIT} of {results.length.toLocaleString()}. Keep
+                  typing to narrow it down.
                 </p>
               ) : null}
             </div>
           )}
         </section>
       ) : (
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_17rem]">
-          <div className="space-y-8">
+        <div className="flex flex-col gap-12">
+          <section aria-labelledby="browse-heading">
+            <div className="max-w-2xl">
+              <h2
+                id="browse-heading"
+                className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted"
+              >
+                Browse
+              </h2>
+              <p className="mt-1.5 text-sm text-text-muted">
+                Open a category in the file explorer.
+              </p>
+            </div>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
+              {categories
+                .filter((category) => !isDirectCategory(category.category))
+                .map((category) => {
+                  const { colorToken } = getCategoryMeta(category.category);
+                  const count = categoryItemCount(category, settings);
+                  return (
+                    <Link
+                      key={category.category}
+                      to={categoryHref(category.category)}
+                      className="group flex min-w-0 items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-3 py-2 text-left transition-colors hover:border-accent/35 hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/30"
+                    >
+                      <span
+                        className={`size-2 shrink-0 rounded-full ${colorToken}`}
+                        aria-hidden="true"
+                      />
+                      <span className="min-w-0 flex-1 truncate text-sm font-medium text-text">
+                        {category.label}
+                      </span>
+                      <span className="shrink-0 font-mono text-xs tabular-nums text-text-muted">
+                        {count.toLocaleString()}
+                      </span>
+                      <span className="shrink-0 opacity-40 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100">
+                        <ArrowIcon />
+                      </span>
+                    </Link>
+                  );
+                })}
+            </div>
+          </section>
+
+          <div className="grid gap-10 lg:grid-cols-2 lg:gap-12">
             {recent.length > 0 ? (
-              <section>
-                <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
+              <section aria-labelledby="recent-heading">
+                <h2
+                  id="recent-heading"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted"
+                >
                   Recently viewed
                 </h2>
-                <div className="mt-3 overflow-hidden rounded-xl border border-border-subtle bg-surface-raised shadow-sm">
-                  <div className="divide-y divide-border-subtle">
-                    {recent.map((item) => (
+                <div className="mt-3 divide-y divide-border-subtle border-t border-border-subtle">
+                  {recent.map((item) => {
+                    const { prefix, leaf } = splitPathLabel(item.label);
+                    return (
                       <Link
                         key={item.href}
                         to={item.href}
-                        className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-surface"
+                        className="group flex items-center gap-3 py-3 transition-colors hover:text-accent focus-visible:outline-none"
                       >
-                        <span className="min-w-0 flex-1 truncate font-medium text-text">
-                          {item.label}
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate font-medium text-text group-hover:text-accent">
+                            {leaf}
+                          </span>
+                          {prefix ? (
+                            <span className="block truncate font-mono text-xs text-text-muted">
+                              {prefix}
+                            </span>
+                          ) : null}
                         </span>
-                        <span className="shrink-0 rounded-full border border-border-subtle px-2 py-0.5 text-xs text-text-muted">
+                        <span className="shrink-0 text-xs text-text-muted">
                           {item.categoryLabel}
                         </span>
                         <ArrowIcon />
                       </Link>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
               </section>
-            ) : null}
+            ) : (
+              <div className="hidden lg:block" aria-hidden="true" />
+            )}
 
-            <section>
-              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
-                Browse
-              </h2>
-              <div className="mt-3 flex flex-wrap gap-3">
-                {categories.map((category) => {
-                  const isDirect =
-                    category.category === "settings" || category.category === "claudeMd";
-                  const { colorToken } = getCategoryMeta(category.category);
-                  const className =
-                    "group flex items-center gap-2 rounded-lg border border-border-subtle bg-surface-raised px-3.5 py-2.5 text-sm shadow-sm transition hover:border-accent/40 hover:bg-surface hover:-translate-y-px active:translate-y-0 active:shadow-none";
-                  const inner = (
-                    <>
-                      <span className={`size-2 shrink-0 rounded-full ${colorToken}`} />
-                      <span className="font-medium text-text">{category.label}</span>
-                      <span className="font-mono text-xs text-text-muted">
-                        {category.files.length}
-                      </span>
-                    </>
-                  );
-                  return isDirect ? (
-                    <Link
-                      key={category.category}
-                      to={category.category === "settings" ? "/settings" : "/claude-md"}
-                      className={className}
-                    >
-                      {inner}
-                    </Link>
-                  ) : (
-                    <button
-                      key={category.category}
-                      type="button"
-                      onClick={() => setScope(category.category)}
-                      className={className}
-                    >
-                      {inner}
-                    </button>
-                  );
-                })}
+            <aside aria-labelledby="config-heading">
+              <div className="flex items-center justify-between gap-4">
+                <h2
+                  id="config-heading"
+                  className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted"
+                >
+                  Current config
+                </h2>
+                <Link
+                  to="/settings"
+                  className="text-xs font-medium text-accent transition hover:opacity-80"
+                >
+                  Edit →
+                </Link>
               </div>
-            </section>
-          </div>
-
-          <aside className="lg:sticky lg:top-0">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xs font-semibold uppercase tracking-[0.2em] text-text-muted">
-                Current config
-              </h2>
-              <Link
-                to="/settings"
-                className="text-xs font-medium text-accent transition hover:opacity-80"
-              >
-                Edit →
-              </Link>
-            </div>
-            <div className="mt-3 overflow-hidden rounded-xl border border-border-subtle bg-surface-raised shadow-sm">
-              <div className="divide-y divide-border-subtle">
+              <div className="mt-3 divide-y divide-border-subtle border-t border-border-subtle">
                 {stats.map((stat) => (
                   <StatRow key={stat.label} stat={stat} />
                 ))}
               </div>
-            </div>
-          </aside>
+            </aside>
+          </div>
         </div>
       )}
     </div>

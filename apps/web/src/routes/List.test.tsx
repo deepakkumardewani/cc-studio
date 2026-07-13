@@ -10,4 +10,5 @@ test("List renders loading state", () => {
     </MemoryRouter>,
   );
   expect(html).toContain("Loading your workspace");
+  expect(html).toContain("animate-pulse");
 });

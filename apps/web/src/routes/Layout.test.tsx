@@ -19,7 +19,13 @@ test("Layout on home route omits the sidebar aside", () => {
   expect(html).not.toContain("<aside");
 });
 
-test("Layout on non-home route renders the sidebar aside", () => {
-  const html = renderLayout("/settings");
+test("Layout on settings, claude-md, and workspace routes omits the sidebar aside", () => {
+  expect(renderLayout("/settings")).not.toContain("<aside");
+  expect(renderLayout("/claude-md")).not.toContain("<aside");
+  expect(renderLayout("/workspace")).not.toContain("<aside");
+});
+
+test("Layout on file routes renders the sidebar aside", () => {
+  const html = renderLayout("/skills/some-skill");
   expect(html).toContain("<aside");
 });
