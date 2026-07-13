@@ -101,6 +101,43 @@ export async function fetchFile(category: ApiCategory, name: string): Promise<Fi
   return parseJson<FileResponse>(await fetch(`/api/file?${params.toString()}`));
 }
 
+const EDITABLE_CATEGORIES = new Set<ApiCategory>([
+  "skills",
+  "plans",
+  "commands",
+  "agents",
+  "claudeMd",
+]);
+
+export function isEditableCategory(category: ApiCategory): boolean {
+  return EDITABLE_CATEGORIES.has(category);
+}
+
+export type SaveFileResponse = {
+  category: ApiCategory;
+  name: string;
+  ok: true;
+};
+
+export async function saveFile(
+  category: ApiCategory,
+  name: string,
+  content: string,
+): Promise<SaveFileResponse> {
+  const params = new URLSearchParams({ category, name });
+  const response = await fetch(`/api/file?${params.toString()}`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ content }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`request failed: ${response.status}`);
+  }
+
+  return response.json() as Promise<SaveFileResponse>;
+}
+
 export async function fetchSettingsSchema(): Promise<SettingsSchemaResponse> {
   return parseJson<SettingsSchemaResponse>(await fetch("/api/settings/schema"));
 }
