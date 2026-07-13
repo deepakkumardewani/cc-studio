@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { ContextSummary } from "../components/ContextSummary";
-import { ContextDetailsModal } from "../components/ContextDetailsModal";
-import { FetchDetailsButton } from "../components/FetchDetailsButton";
 import { fetchContextDetails, type ContextDetails } from "../api/context";
+import { getCachedContext, setCachedContext } from "../lib/contextCache";
 
 function SkeletonRow() {
   return (
@@ -31,32 +30,87 @@ function LoadingSkeleton() {
   );
 }
 
+/** Turn API/CLI errors into something a non-developer can act on. */
+export function friendlyContextError(raw: string | null | undefined): {
+  title: string;
+  body: string;
+} {
+  const message = (raw ?? "").toLowerCase();
+
+  if (
+    message.includes("cli") ||
+    message.includes("claude") ||
+    message.includes("path") ||
+    message.includes("enoent") ||
+    message.includes("not found") ||
+    message.includes("spawn")
+  ) {
+    return {
+      title: "Claude Code isn't available",
+      body: "We couldn't read your live context. Open Claude Code (or install the claude command-line tool), then try again.",
+    };
+  }
+
+  if (
+    message.includes("network") ||
+    message.includes("fetch") ||
+    message.includes("failed to fetch") ||
+    message.includes("reach the server")
+  ) {
+    return {
+      title: "Couldn't reach the server",
+      body: "The app couldn't talk to the local backend. Make sure cc-studio is still running, then try again.",
+    };
+  }
+
+  if (message.includes("timeout") || message.includes("timed out")) {
+    return {
+      title: "That took too long",
+      body: "Reading your context timed out. Claude Code may be busy — wait a moment and try again.",
+    };
+  }
+
+  return {
+    title: "Couldn't load your context",
+    body: "Something went wrong while reading how full Claude's memory is. Try again in a moment. If it keeps failing, restart Claude Code and cc-studio.",
+  };
+}
+
 export function Workspace() {
-  const [data, setData] = useState<ContextDetails | null>(null);
-  const [loading, setLoading] = useState(true);
+  const cached = getCachedContext();
+  const [data, setData] = useState<ContextDetails | null>(cached);
+  const [loading, setLoading] = useState(cached === null);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [modalOpen, setModalOpen] = useState(false);
 
   const load = useCallback((isRefresh = false) => {
+    const hasCache = getCachedContext() !== null;
     if (isRefresh) {
+      // Explicit refresh: show skeleton so the wait is obvious.
       setRefreshing(true);
-    } else {
+      setLoading(true);
+      setError(null);
+    } else if (!hasCache) {
       setLoading(true);
     }
 
     fetchContextDetails()
       .then((res) => {
         if (res.success) {
+          setCachedContext(res.data);
           setData(res.data);
           setError(null);
         } else {
-          setData(null);
+          if (!getCachedContext()) {
+            setData(null);
+          }
           setError(res.error);
         }
       })
       .catch((err) => {
-        setData(null);
+        if (!getCachedContext()) {
+          setData(null);
+        }
         setError(err instanceof Error ? err.message : "Unable to reach the server.");
       })
       .finally(() => {
@@ -66,60 +120,59 @@ export function Workspace() {
   }, []);
 
   useEffect(() => {
+    // Always refresh in the background; cache just skips the empty loading state.
     load(false);
   }, [load]);
 
+  const friendly = friendlyContextError(error);
+
   return (
-    <section className="mx-auto flex w-full max-w-5xl flex-col gap-6 py-2">
-      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <h2 className="font-display text-2xl font-semibold tracking-tight text-text">Workspace</h2>
-        <p className="font-mono text-sm text-text-muted">context inspector</p>
-      </div>
-
-      <ContextDetailsModal isOpen={modalOpen} onClose={() => setModalOpen(false)} />
-
+    <section className="mx-auto flex w-full max-w-5xl flex-col gap-8 py-2">
       {loading ? (
-        <LoadingSkeleton />
-      ) : error || !data ? (
+        <>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h2 className="font-display text-2xl font-semibold tracking-tight text-text">
+              Workspace
+            </h2>
+            <p className="font-mono text-sm text-text-muted">context inspector</p>
+            {refreshing ? (
+              <span className="text-sm text-text-muted" aria-live="polite">
+                Refreshing…
+              </span>
+            ) : null}
+          </div>
+          <LoadingSkeleton />
+        </>
+      ) : error && !data ? (
         <div
           role="alert"
-          className="rounded-lg border border-border-subtle bg-surface-raised px-5 py-4 text-sm text-text-muted"
+          className="rounded-xl border border-border-subtle bg-surface-raised px-6 py-5"
         >
-          <p className="font-medium text-text">Unable to fetch context.</p>
-          <p className="mt-1">
-            {error ?? "Unknown error."}
-            {(!error || error.includes("CLI") || error.includes("claude")) && (
-              <span>
-                {" "}
-                Make sure the{" "}
-                <code className="rounded bg-surface-soft px-1 font-mono text-xs">claude</code> CLI
-                is installed and in your PATH.
-              </span>
-            )}
-          </p>
+          <h2 className="font-display text-lg font-semibold tracking-tight text-text">
+            {friendly.title}
+          </h2>
+          <p className="mt-2 max-w-xl text-sm leading-relaxed text-text-muted">{friendly.body}</p>
           <button
             type="button"
             onClick={() => load(false)}
-            className="mt-3 rounded px-3 py-1.5 text-xs font-medium text-text-muted transition hover:bg-surface-soft hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            className="mt-4 rounded-lg bg-accent px-3.5 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           >
-            Retry
+            Try again
           </button>
         </div>
-      ) : (
-        <>
-          <ContextSummary
-            breakdown={data.categories}
-            total={data.total_tokens}
-            maxTokens={data.max_tokens}
-            percentage={data.percentage}
-            model={data.model}
-            isEstimated={data.is_estimated}
-            onRefresh={() => load(true)}
-            refreshing={refreshing}
-          />
-          <FetchDetailsButton onClick={() => setModalOpen(true)} />
-        </>
-      )}
+      ) : data ? (
+        <ContextSummary
+          breakdown={data.categories}
+          total={data.total_tokens}
+          maxTokens={data.max_tokens}
+          percentage={data.percentage}
+          model={data.model}
+          isEstimated={data.is_estimated}
+          onRefresh={() => load(true)}
+          refreshing={refreshing}
+          staleError={error ? friendly : null}
+        />
+      ) : null}
     </section>
   );
 }
