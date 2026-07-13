@@ -29,7 +29,9 @@ dist-ssr
 # Verification artifacts
 .verification/
 .verification-screenshots/
-
+.screenshots/
 *.tsbuildinfo
 
 agent_docs/
+node-compile-cache/
+.vite-hooks/
