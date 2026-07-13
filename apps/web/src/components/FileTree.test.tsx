@@ -77,12 +77,13 @@ test("FileTree toggles category and folder open state on click", () => {
   expect(screen.queryByRole("link", { name: "alpha.md" })).toBeNull();
 });
 
-test("FileTree renders single-file categories as direct links", () => {
+test("FileTree omits Settings and CLAUDE.md — those live in primary nav", () => {
   renderTree();
 
-  expect(screen.getByRole("link", { name: "CLAUDE.md" })).toBeTruthy();
-  expect(screen.getByRole("link", { name: "settings.json" })).toBeTruthy();
+  expect(screen.queryByRole("link", { name: "CLAUDE.md" })).toBeNull();
+  expect(screen.queryByRole("link", { name: "settings.json" })).toBeNull();
   expect(screen.queryByRole("button", { name: /Expand CLAUDE.md/i })).toBeNull();
+  expect(screen.getByRole("button", { name: "Expand Skills" })).toBeTruthy();
 });
 
 test("FileTree persists open folders in localStorage", () => {
@@ -128,7 +129,7 @@ test("FileTree auto-expands categories and folders for the active route", () => 
   expect(screen.getByRole("button", { name: "Collapse colorize" })).toBeTruthy();
 });
 
-test("FileTree renders folder categories before single-file categories regardless of input order", () => {
+test("FileTree ignores direct categories even when listed first in input", () => {
   const reordered: TreeCategory[] = [
     { category: "claudeMd", label: "CLAUDE.md", files: [{ name: "CLAUDE.md" }] },
     { category: "settings", label: "Settings", files: [{ name: "settings.json" }] },
@@ -150,6 +151,7 @@ test("FileTree renders folder categories before single-file categories regardles
   const nav = screen.getByRole("navigation", { name: "Config files" });
   const labels = [...nav.querySelectorAll("span.truncate")].map((el) => el.textContent);
 
-  expect(labels.indexOf("Skills")).toBeLessThan(labels.indexOf("CLAUDE.md"));
-  expect(labels.indexOf("Skills")).toBeLessThan(labels.indexOf("settings.json"));
+  expect(labels).toContain("Skills");
+  expect(labels).not.toContain("CLAUDE.md");
+  expect(labels).not.toContain("settings.json");
 });

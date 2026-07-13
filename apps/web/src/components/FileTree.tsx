@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
-import type { TreeCategory } from "../lib/api";
+import { categoryToRoute, type TreeCategory } from "../lib/api";
 import { getCategoryMeta } from "../lib/categories";
-import { buildTree, type TreeFile, type TreeNode } from "../lib/tree";
+import { buildTree, type TreeNode } from "../lib/tree";
+import { isDirectCategory } from "../lib/workspace";
 
 const OPEN_FOLDERS_KEY = "cc-studio-tree-open";
 
@@ -28,10 +29,6 @@ function folderKey(category: string, path: string): string {
 
 function categoryKey(category: string): string {
   return `category:${category}`;
-}
-
-function isSingleFileCategory(nodes: TreeNode[]): nodes is [TreeFile] {
-  return nodes.length === 1 && nodes[0].kind === "file";
 }
 
 function isHrefInTree(nodes: TreeNode[], href: string): boolean {
@@ -217,10 +214,9 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
   const [openFolders, setOpenFolders] = useState(loadOpenFolders);
 
   const trees = useMemo(() => {
-    const built = categories.map((category) => ({ category, nodes: buildTree(category) }));
-    const folderTrees = built.filter((tree) => !isSingleFileCategory(tree.nodes));
-    const singleFileTrees = built.filter((tree) => isSingleFileCategory(tree.nodes));
-    return [...folderTrees, ...singleFileTrees];
+    // Settings + CLAUDE.md are primary nav destinations, not sidebar entries.
+    const browseable = categories.filter((category) => !isDirectCategory(category.category));
+    return browseable.map((category) => ({ category, nodes: buildTree(category) }));
   }, [categories]);
 
   useEffect(() => {
@@ -229,7 +225,11 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
       let changed = false;
 
       for (const { category, nodes } of trees) {
-        if (isHrefInTree(nodes, activeHref)) {
+        const categoryHref = `/${categoryToRoute(category.category)}`;
+        const onCategoryIndex = activeHref === categoryHref;
+        const inCategory = onCategoryIndex || isHrefInTree(nodes, activeHref);
+
+        if (inCategory) {
           const catOpenKey = categoryKey(category.category);
           if (!next.has(catOpenKey)) {
             next.add(catOpenKey);
@@ -283,45 +283,37 @@ export function FileTree({ categories, loading = false, error = null }: FileTree
   return (
     <nav aria-label="Config files" className="space-y-1 px-2">
       {trees.map(({ category, nodes }) => {
-        if (isSingleFileCategory(nodes)) {
-          const file = nodes[0];
-          const isActive = activeHref === file.href;
-
-          return (
-            <NavLink
-              key={category.category}
-              to={file.href}
-              className={({ isActive: linkActive }) =>
-                [
-                  "flex items-center gap-2 rounded-md px-2 py-2 text-sm font-medium",
-                  fileLinkClass(linkActive || isActive),
-                ].join(" ")
-              }
-            >
-              <FileIcon />
-              <span className="truncate">{file.name}</span>
-            </NavLink>
-          );
-        }
-
         const catOpenKey = categoryKey(category.category);
         const isCategoryOpen = openFolders.has(catOpenKey);
+        const categoryHref = `/${categoryToRoute(category.category)}`;
+        const isCategoryIndex = activeHref === categoryHref;
 
         return (
           <section key={category.category}>
-            <button
-              type="button"
-              aria-expanded={isCategoryOpen}
-              aria-label={`${isCategoryOpen ? "Collapse" : "Expand"} ${category.label}`}
-              className="flex w-full items-center gap-2 rounded-md px-2 py-2 text-left text-sm font-semibold text-text hover:bg-surface"
-              onClick={() => handleToggle(catOpenKey)}
+            <div
+              className={`flex w-full items-center gap-1 rounded-md px-1 py-1 text-sm font-semibold text-text ${
+                isCategoryIndex ? "bg-surface" : ""
+              }`}
             >
-              <ChevronIcon expanded={isCategoryOpen} />
-              <span
-                className={`size-2 shrink-0 rounded-full ${getCategoryMeta(category.category).colorToken}`}
-              />
-              <span className="truncate">{category.label}</span>
-            </button>
+              <button
+                type="button"
+                aria-expanded={isCategoryOpen}
+                aria-label={`${isCategoryOpen ? "Collapse" : "Expand"} ${category.label}`}
+                className="grid size-7 shrink-0 place-items-center rounded-md hover:bg-surface"
+                onClick={() => handleToggle(catOpenKey)}
+              >
+                <ChevronIcon expanded={isCategoryOpen} />
+              </button>
+              <NavLink
+                to={categoryHref}
+                className="flex min-w-0 flex-1 items-center gap-2 rounded-md px-1 py-1 hover:bg-surface"
+              >
+                <span
+                  className={`size-2 shrink-0 rounded-full ${getCategoryMeta(category.category).colorToken}`}
+                />
+                <span className="truncate">{category.label}</span>
+              </NavLink>
+            </div>
             {isCategoryOpen ? (
               nodes.length === 0 ? (
                 <p className="px-3 py-1 text-sm text-text-muted">No files</p>
